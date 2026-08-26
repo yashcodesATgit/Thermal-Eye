@@ -1,0 +1,17 @@
+[
+  { "id": "FAC-001", "name": "Reliance Jamnagar Refinery", "type": "refinery", "latitude": 22.3072, "longitude": 70.8022, "city": "Jamnagar", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-002", "name": "Adani Power Mundra", "type": "power_plant", "latitude": 23.0225, "longitude": 72.5714, "city": "Ahmedabad", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-003", "name": "IOCL Vadodara Refinery", "type": "refinery", "latitude": 22.3100, "longitude": 73.1900, "city": "Vadodara", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-004", "name": "Essar Steel Hazira", "type": "steel_plant", "latitude": 21.1702, "longitude": 72.8311, "city": "Surat", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-005", "name": "Nayara Energy Vadinar", "type": "refinery", "latitude": 22.4707, "longitude": 70.0577, "city": "Vadinar", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-006", "name": "ONGC Hazira Complex", "type": "lng_terminal", "latitude": 20.9500, "longitude": 72.8300, "city": "Hazira", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-007", "name": "Gujarat Ambuja Cements", "type": "cement_plant", "latitude": 22.5600, "longitude": 72.9500, "city": "Anand", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-008", "name": "Petronet LNG Dahej", "type": "lng_terminal", "latitude": 21.2300, "longitude": 72.8600, "city": "Dahej", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-009", "name": "Torrent Power Sabarmati", "type": "power_plant", "latitude": 23.5900, "longitude": 72.3800, "city": "Mehsana", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-010", "name": "GSPC LNG Terminal Mundra", "type": "lng_terminal", "latitude": 22.1500, "longitude": 70.1300, "city": "Mundra", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-011", "name": "UltraTech Cement Kovaya", "type": "cement_plant", "latitude": 21.4800, "longitude": 71.8500, "city": "Rajula", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-012", "name": "Tata Power Mundra UMPP", "type": "power_plant", "latitude": 22.8400, "longitude": 69.7200, "city": "Mundra", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-013", "name": "ArcelorMittal Nippon Hazira", "type": "steel_plant", "latitude": 21.1900, "longitude": 72.8100, "city": "Hazira", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-014", "name": "GNFC Bharuch", "type": "power_plant", "latitude": 21.7200, "longitude": 73.0000, "city": "Bharuch", "state": "Gujarat", "country": "India" },
+  { "id": "FAC-015", "name": "Sanghi Cement Kutch", "type": "cement_plant", "latitude": 22.9300, "longitude": 69.6400, "city": "Kutch", "state": "Gujarat", "country": "India" }
+]

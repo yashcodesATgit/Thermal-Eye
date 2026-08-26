@@ -1,0 +1,82 @@
+[
+  {
+    "id": "ALT-001",
+    "hotspotId": "HS-001",
+    "facilityId": "FAC-001",
+    "severity": "critical",
+    "title": "Critical Anomaly",
+    "message": "Sustained high thermal signature at Reliance Jamnagar Refinery.",
+    "timestamp": "2026-08-26T08:35:00Z",
+    "acknowledged": false
+  },
+  {
+    "id": "ALT-002",
+    "hotspotId": "HS-012",
+    "facilityId": "FAC-005",
+    "severity": "critical",
+    "title": "Severe Flare Detected",
+    "message": "Abnormal flaring detected at Nayara Energy Vadinar.",
+    "timestamp": "2026-08-26T09:05:00Z",
+    "acknowledged": false
+  },
+  {
+    "id": "ALT-003",
+    "hotspotId": "HS-009",
+    "facilityId": "FAC-004",
+    "severity": "critical",
+    "title": "Industrial Fire Alert",
+    "message": "High intensity thermal event at Essar Steel Hazira.",
+    "timestamp": "2026-08-26T07:20:00Z",
+    "acknowledged": false
+  },
+  {
+    "id": "ALT-004",
+    "hotspotId": "HS-007",
+    "facilityId": "FAC-003",
+    "severity": "warning",
+    "title": "Elevated Flaring",
+    "message": "Gas flare activity exceeding baseline at IOCL Vadodara.",
+    "timestamp": "2026-08-26T04:10:00Z",
+    "acknowledged": false
+  },
+  {
+    "id": "ALT-005",
+    "hotspotId": "HS-024",
+    "facilityId": "FAC-006",
+    "severity": "warning",
+    "title": "Unusual Heat Signature",
+    "message": "Potential industrial fire near ONGC Hazira Complex.",
+    "timestamp": "2026-08-26T01:15:00Z",
+    "acknowledged": false
+  },
+  {
+    "id": "ALT-006",
+    "hotspotId": "HS-021",
+    "facilityId": null,
+    "severity": "warning",
+    "title": "Wildfire Monitored",
+    "message": "Wildfire detected in open terrain. Monitoring spread.",
+    "timestamp": "2026-08-26T02:05:00Z",
+    "acknowledged": true
+  },
+  {
+    "id": "ALT-007",
+    "hotspotId": "HS-016",
+    "facilityId": null,
+    "severity": "info",
+    "title": "Unknown Source",
+    "message": "Low confidence thermal anomaly detected.",
+    "timestamp": "2026-08-26T03:30:00Z",
+    "acknowledged": true
+  },
+  {
+    "id": "ALT-008",
+    "hotspotId": "HS-018",
+    "facilityId": null,
+    "severity": "info",
+    "title": "Agricultural Fire",
+    "message": "Likely crop burning activity detected.",
+    "timestamp": "2026-08-26T05:40:00Z",
+    "acknowledged": false
+  }
+]

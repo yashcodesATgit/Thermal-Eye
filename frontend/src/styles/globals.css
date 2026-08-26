@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #080C14;
+  color: #E8EDF5;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Operational dark scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D1117;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2D45;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2D7DD2;
+}
+
+/* Input / select / textarea reset — but NOT buttons */
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+  outline: none;
+  border: none;
+  background: none;
+}
+
+/* Buttons: reset cursor + font only — preserve background */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* MapLibre attribution dark styling */
+.maplibregl-ctrl-attrib {
+  background-color: rgba(8, 12, 20, 0.7) !important;
+  color: #7A8FA8 !important;
+  font-size: 10px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #7A8FA8 !important;
+}
+
+.maplibregl-ctrl-attrib-button {
+  background-color: rgba(15, 22, 35, 0.9) !important;
+}
+
+/* Overlay panel base: solid dark, no blur for performance */
+.tw-panel {
+  background-color: #111827;
+  border: 1px solid #1E2D45;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  color: #E8EDF5;
+}
