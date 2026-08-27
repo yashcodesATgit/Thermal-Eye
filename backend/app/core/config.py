@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     # CORS
     frontend_origin: str = "http://localhost:5173"
 
+    @property
+    def cors_origins(self) -> list[str]:
+        """Return list of allowed CORS origins, supporting comma-separated strings."""
+        origins = [o.strip() for o in self.frontend_origin.split(",") if o.strip()]
+        return origins or ["http://localhost:5173"]
+
     # Environment
     environment: str = "development"
 
