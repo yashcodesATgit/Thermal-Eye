@@ -10,9 +10,12 @@ import { AlertCircle, ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { useMapStore } from '../store/mapStore';
 
+import { ChatAssistant } from '../components/ChatAssistant';
+
 export default function MapPage(): React.JSX.Element {
   const mapRef = useRef<MapRef>(null!);
   const fetchAndSetLatestDate = useMapStore((s) => s.fetchAndSetLatestDate);
+  const selectedHotspotId = useMapStore((s) => s.selectedHotspotId);
 
   useEffect(() => {
     fetchAndSetLatestDate();
@@ -58,6 +61,11 @@ export default function MapPage(): React.JSX.Element {
           <div className="flex-1 min-h-0 w-full relative overflow-hidden bg-[#080C14]">
             <Map mapRef={mapRef} />
             <MapControls mapRef={mapRef} />
+            {/* Compact Floating AI Intelligence Assistant in Right Bottom Corner of Map Area */}
+            <ChatAssistant
+              selectedHotspotId={selectedHotspotId}
+              positionClass="absolute bottom-3 right-3 z-30"
+            />
           </div>
 
           {/* Bottom: Past Activity Dashboard (Center-Only Width, aligned with Map) */}

@@ -23,6 +23,19 @@ export default function IncidentTable({
 }: IncidentTableProps): React.JSX.Element {
   const navigate = useNavigate();
   const selectHotspot = useMapStore((s) => s.selectHotspot);
+  const selectFacility = useMapStore((s) => s.selectFacility);
+  const setSelectedDate = useMapStore((s) => s.setSelectedDate);
+
+  const handleRowClick = (incident: Incident) => {
+    if (incident.timestamp) {
+      setSelectedDate(incident.timestamp.slice(0, 10));
+    }
+    selectHotspot(incident.hotspotId);
+    if (incident.facilityId) {
+      selectFacility(incident.facilityId);
+    }
+    navigate('/');
+  };
   
   const [sortField, setSortField] = useState<SortField>('timestamp');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -90,11 +103,6 @@ export default function IncidentTable({
     ) : (
       <ArrowDown className="w-3 h-3 inline-block ml-1" />
     );
-  };
-
-  const handleRowClick = (incident: Incident) => {
-    selectHotspot(incident.hotspotId);
-    navigate('/');
   };
 
   if (filteredAndSortedIncidents.length === 0) {

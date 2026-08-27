@@ -40,6 +40,23 @@ async def list_facilities(
     )
 
 
+@router.get("/facilities/summary")
+async def get_facilities_summary(
+    db: AsyncSession = Depends(get_db),
+):
+    """Get facility type distribution summary counts."""
+    service = FacilityService(db)
+    items, total = await service.list(page=1, page_size=500)
+    type_counts = {}
+    for f in items:
+        ftype = f.type or "Industrial Facility"
+        type_counts[ftype] = type_counts.get(ftype, 0) + 1
+    return {
+        "totalFacilities": total,
+        "typeDistribution": type_counts
+    }
+
+
 @router.get("/facilities/{facility_id}", response_model=FacilityResponse)
 async def get_facility(
     facility_id: str,

@@ -27,18 +27,33 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan context manager for startup/shutdown logging."""
+    """Application lifespan context manager for startup/shutdown logging, DB init, and FIRMS sync scheduling."""
     logger.info("ThermalWatch API starting up...")
     logger.info("Environment: %s", settings.environment)
     logger.info("Frontend origin: %s", settings.frontend_origin)
     logger.info("API docs available at /docs")
+    try:
+        from app.db.session import init_db
+        await init_db()
+        logger.info("Database schema initialized successfully.")
+    except Exception as e:
+        logger.warning("DB table creation notice: %s", e)
+
+    # Initialize FIRMS sync manager from existing database
+    try:
+        from app.services.firms_status import firms_sync_manager
+        await firms_sync_manager.initialize_from_db()
+        logger.info("FIRMS Sync Manager initialized. Status: %s", firms_sync_manager.get_status_classification())
+    except Exception as e:
+        logger.warning("FIRMS Sync Manager initialization notice: %s", e)
+
     yield
     logger.info("ThermalWatch API shutting down...")
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="ThermalWatch API",
+    title="ThermalTrace API",
     description="Geospatial thermal intelligence platform API",
     version="0.1.0",
     docs_url="/docs",

@@ -2,8 +2,7 @@ import { create } from 'zustand';
 import type { HotspotType } from '../types/hotspot';
 import type { FacilityType } from '../types/facility';
 import type { MapStyleId } from '../config/mapStyles';
-
-const getTodayString = () => new Date().toISOString().slice(0, 10);
+import { getTodayISTString } from '../utils/dateUtils';
 
 interface MapStoreState {
   // Selection
@@ -64,7 +63,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
     'lng_terminal',
   ],
   minimumConfidence: 0,
-  selectedDate: getTodayString(),
+  selectedDate: getTodayISTString(),
   isDateInitialized: false,
   showHeatmap: true,
   showFacilities: true,
@@ -91,17 +90,8 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   fetchAndSetLatestDate: async () => {
     const state = get();
     if (state.isDateInitialized) return;
-    try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-      const response = await fetch(`${baseUrl}/api/v1/hotspots/latest-date`);
-      const data = await response.json();
-      if (data && data.date) {
-        set({ selectedDate: data.date, isDateInitialized: true });
-      }
-    } catch (e) {
-      console.error('Failed to fetch latest date:', e);
-      set({ isDateInitialized: true }); // Prevent infinite retries
-    }
+    const today = getTodayISTString();
+    set({ selectedDate: today, isDateInitialized: true });
   },
 
   setHotspotTypes: (types) => set({ activeHotspotTypes: types }),

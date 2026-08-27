@@ -46,7 +46,7 @@ async_session_factory = async_sessionmaker(
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """FastAPI dependency that provides a database session per request."""
+    """Dependency provider yielding async SQLAlchemy session."""
     async with async_session_factory() as session:
         try:
             yield session
@@ -55,3 +55,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+
+async def init_db():
+    """Ensure database tables exist on startup."""
+    from app.db.base import Base
+    from app.db.models import User, Hotspot, Facility  # noqa
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

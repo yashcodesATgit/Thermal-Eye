@@ -5,32 +5,32 @@ import { useActivityQuery } from '../services/queries/useActivityQuery';
 import type { HotspotType } from '../types/hotspot';
 import { HOTSPOT_COLORS, HOTSPOT_LABELS } from '../types/hotspot';
 
+import { getTodayISTString, formatISTDateLabel } from '../utils/dateUtils';
+
 interface DateItem {
   label: string;
   isoDate: string;
   isToday?: boolean;
   counts: Record<HotspotType, number>;
+  total?: number;
 }
 
 export default function BottomAnalytics(): React.JSX.Element {
   const selectedDate = useMapStore((s) => s.selectedDate);
   const setSelectedDate = useMapStore((s) => s.setSelectedDate);
   const minimumConfidence = useMapStore((s) => s.minimumConfidence);
+  const todayIST = getTodayISTString();
 
-  const { data: activityData } = useActivityQuery(selectedDate, minimumConfidence);
+  // Always fetch 7-day activity sequence ending on Today IST for NRT monitoring
+  const { data: activityData } = useActivityQuery(todayIST, minimumConfidence);
 
   // 7-day date items computed dynamically from backend aggregation
   const dates: DateItem[] = useMemo(() => {
     if (!activityData || !activityData.days) return [];
 
     return activityData.days.map((day) => {
-      // Create a nice label like "26 Aug"
-      const d = new Date(day.date);
-      // We assume date is YYYY-MM-DD
-      const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-      // "isToday" is relative to the selectedDate being the last day in the sequence
-      // but let's just mark the exact selectedDate as "Today" or active
-      const isToday = day.date === selectedDate;
+      const label = formatISTDateLabel(day.date, false);
+      const isToday = day.date === todayIST;
       
       const counts: Record<HotspotType, number> = {
         industrial_fire: day.byType.industrialFire || 0,
@@ -48,7 +48,7 @@ export default function BottomAnalytics(): React.JSX.Element {
         total: day.total,
       };
     });
-  }, [activityData, selectedDate]);
+  }, [activityData, todayIST]);
 
   // Find max total count among all 7 days for relative height scaling
   const maxTotal = useMemo(() => {

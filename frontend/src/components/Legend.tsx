@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Info, RotateCcw } from 'lucide-react';
+import { Info, RotateCcw, Check } from 'lucide-react';
 import { useMapStore } from '../store/mapStore';
 import { useHotspotsQuery } from '../services/queries/useHotspotsQuery';
 import type { HotspotType } from '../types/hotspot';
@@ -42,7 +42,8 @@ export default function Legend(): React.JSX.Element {
     };
     if (hotspots) {
       for (const h of hotspots) {
-        if (map[h.type] !== undefined) map[h.type]++;
+        const effectiveType = (h.mlType || h.type) as HotspotType;
+        if (map[effectiveType] !== undefined) map[effectiveType]++;
         else map.unknown++;
       }
     }
@@ -124,12 +125,15 @@ export default function Legend(): React.JSX.Element {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-mono text-[#8B9BB4]">{count}</span>
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={() => {}}
-                      className="w-3.5 h-3.5 accent-[#2D7DD2] rounded cursor-pointer"
-                    />
+                    <div
+                      className={`w-3.5 h-3.5 rounded-[3px] border flex items-center justify-center transition-all duration-200 shrink-0 ${
+                        isActive
+                          ? 'bg-[#2D7DD2] border-[#2D7DD2] shadow-sm shadow-[#2D7DD2]/40 ring-1 ring-[#2D7DD2]/30'
+                          : 'bg-[#111827] border-[#374151] hover:border-[#6B7280]'
+                      }`}
+                    >
+                      {isActive && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
+                    </div>
                   </div>
                 </button>
               );
@@ -205,12 +209,15 @@ export default function Legend(): React.JSX.Element {
                       {item.label}
                     </span>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={() => {}}
-                    className="w-3.5 h-3.5 accent-[#2D7DD2] rounded cursor-pointer"
-                  />
+                  <div
+                    className={`w-3.5 h-3.5 rounded-[3px] border flex items-center justify-center transition-all duration-200 shrink-0 ${
+                      isActive
+                        ? 'bg-[#2D7DD2] border-[#2D7DD2] shadow-sm shadow-[#2D7DD2]/40 ring-1 ring-[#2D7DD2]/30'
+                        : 'bg-[#111827] border-[#374151] hover:border-[#6B7280]'
+                    }`}
+                  >
+                    {isActive && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
+                  </div>
                 </button>
               );
             })}

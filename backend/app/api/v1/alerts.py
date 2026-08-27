@@ -20,6 +20,7 @@ async def list_alerts(
     page_size: int = Query(100, ge=1, le=500, description="Items per page"),
     severity: Optional[str] = Query(None, description="Filter by severity"),
     acknowledged: Optional[bool] = Query(None, description="Filter by acknowledged status"),
+    date: Optional[str] = Query(None, description="Filter by IST date (YYYY-MM-DD)"),
     db: AsyncSession = Depends(get_db),
 ):
     """List alerts with optional filters and pagination."""
@@ -29,6 +30,7 @@ async def list_alerts(
         page_size=page_size,
         severity=severity,
         acknowledged=acknowledged,
+        date_str=date,
     )
     return PaginatedResponse(
         data=[AlertResponse.model_validate(a) for a in items],

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Flame,
   Map as MapIcon,
@@ -16,10 +16,17 @@ import {
   Info,
   X,
   Bell,
+  LogIn,
+  UserPlus,
+  LogOut
 } from 'lucide-react';
 import { useMapStore } from '../store/mapStore';
 import { useAlertsQuery } from '../services/queries/useAlertsQuery';
-import type { AlertSeverity } from '../types/alert';
+import type { AlertSeverity, Alert } from '../types/alert';
+import { AuthModal } from './AuthModal';
+import { getStoredUser, logout as apiLogout, User } from '../services/authService';
+
+import { getRollingISTDates, formatISTDateLabel } from '../utils/dateUtils';
 
 interface NavItem {
   label: string;
@@ -28,31 +35,14 @@ interface NavItem {
   badge?: string;
 }
 
-const AVAILABLE_DATES = (() => {
-  const dates = [];
-  const now = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const isoDate = d.toISOString().slice(0, 10);
-    const label = `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()}`;
-    dates.push({ label, isoDate, isToday: i === 0 });
-  }
-  return dates;
-})();
-
 function formatDateDisplay(isoDate: string): string {
-  const match = AVAILABLE_DATES.find((d) => d.isoDate === isoDate);
-  if (match) return match.label;
-  const d = new Date(isoDate);
-  if (isNaN(d.getTime())) {
-    const now = new Date();
-    return `${now.getDate()} ${now.toLocaleString('en-US', { month: 'short' })} ${now.getFullYear()}`;
-  }
-  return `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()}`;
+  if (!isoDate) return '';
+  return formatISTDateLabel(isoDate, true);
 }
 
 export default function Navbar(): React.JSX.Element {
+  const navigate = useNavigate();
+  const datesList = getRollingISTDates(7);
   const selectedDate = useMapStore((s) => s.selectedDate);
   const setSelectedDate = useMapStore((s) => s.setSelectedDate);
   const selectHotspot = useMapStore((s) => s.selectHotspot);
@@ -60,9 +50,25 @@ export default function Navbar(): React.JSX.Element {
 
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(getStoredUser());
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const datePickerRef = useRef<HTMLDivElement>(null);
   const alertsRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenAuth = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await apiLogout();
+    setCurrentUser(null);
+    setIsUserMenuOpen(false);
+  };
 
   const { data: alerts, isLoading: alertsLoading } = useAlertsQuery();
   const unackCount = alerts?.filter((a) => !a.acknowledged).length ?? alerts?.length ?? 6;
@@ -97,10 +103,19 @@ export default function Navbar(): React.JSX.Element {
     setIsDatePickerOpen(false);
   };
 
-  const handleAlertClick = (hotspotId?: string, facilityId?: string) => {
-    if (hotspotId) selectHotspot(hotspotId);
-    else if (facilityId) selectFacility(facilityId);
+  const handleAlertClick = (alert: Alert) => {
+    if (alert.timestamp) {
+      const dateStr = alert.timestamp.slice(0, 10);
+      setSelectedDate(dateStr);
+    }
+    if (alert.hotspotId) {
+      selectHotspot(alert.hotspotId);
+    }
+    if (alert.facilityId) {
+      selectFacility(alert.facilityId);
+    }
     setIsAlertsOpen(false);
+    navigate('/');
   };
 
   const getAlertIcon = (severity: AlertSeverity) => {
@@ -123,7 +138,7 @@ export default function Navbar(): React.JSX.Element {
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-xs tracking-wider text-[#E8EDF5] leading-none">
-            THERMAL<span className="text-[#FF4444]">WATCH</span>
+            THERMAL<span className="text-[#FF4444]">TRACE</span>
           </span>
           <span className="text-[8px] text-[#6B7280] font-mono tracking-tight">
             AI-POWERED GEOSPATIAL THERMAL INTELLIGENCE
@@ -213,7 +228,7 @@ export default function Navbar(): React.JSX.Element {
                     <button
                       key={alert.id}
                       type="button"
-                      onClick={() => handleAlertClick(alert.hotspotId, alert.facilityId)}
+                      onClick={() => handleAlertClick(alert)}
                       className="w-full text-left p-2.5 rounded-lg bg-[#0D131F] border border-[#1e293b] hover:border-[#2D7DD2] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between gap-1 mb-1">
@@ -261,7 +276,7 @@ export default function Navbar(): React.JSX.Element {
                 <span className="text-[9px] text-[#2D7DD2] font-mono">INDIA</span>
               </div>
               <div className="max-h-48 overflow-y-auto custom-scrollbar">
-                {AVAILABLE_DATES.map((item) => {
+                {datesList.map((item) => {
                   const isSelected = item.isoDate === selectedDate;
                   return (
                     <button
@@ -285,16 +300,76 @@ export default function Navbar(): React.JSX.Element {
           )}
         </div>
 
-        {/* User Profile */}
-        <div className="flex items-center gap-2 pl-1 border-l border-[#1e293b]">
-          <div className="flex items-center justify-center rounded-full w-6 h-6 bg-[#2D7DD2] text-white font-bold text-[11px]">
-            Y
-          </div>
-          <span className="hidden md:block text-xs font-medium text-[#E8EDF5]">
-            Yash Pandey
-          </span>
+        {/* User Identity / Authentication State */}
+        <div className="flex items-center gap-2 pl-2 border-l border-[#1e293b]">
+          {currentUser ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#111827] border border-[#1e293b] hover:border-[#2D7DD2]/50 transition-colors"
+              >
+                <div className="flex items-center justify-center rounded-full w-6 h-6 bg-[#2D7DD2] text-white font-bold text-[11px] uppercase">
+                  {currentUser.name.charAt(0)}
+                </div>
+                <span className="hidden md:block text-xs font-semibold text-[#E8EDF5]">
+                  {currentUser.name}
+                </span>
+                <ChevronDown className="w-3 h-3 text-[#6B7280]" />
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-48 rounded-xl bg-[#111827] border border-[#1e293b] shadow-2xl p-2 z-50 text-xs space-y-1.5">
+                  <div className="px-2.5 py-1.5 border-b border-[#1e293b]">
+                    <p className="font-bold text-[#E8EDF5] truncate">{currentUser.name}</p>
+                    <p className="text-[10px] text-[#7A8FA8] truncate">{currentUser.email}</p>
+                    <span className="mt-1 inline-block px-1.5 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 text-[9px] font-semibold uppercase">
+                      Authenticated Analyst
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-red-400 hover:bg-red-950/20 transition-colors font-medium text-xs text-left"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleOpenAuth('login')}
+                className="px-3 py-1 bg-[#162033] hover:bg-[#1E2D45] text-[#E8EDF5] border border-[#1E2D45] rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5 text-[#2D7DD2]" />
+                <span>Log In</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOpenAuth('signup')}
+                className="px-3 py-1 bg-[#2D7DD2] hover:bg-[#2D7DD2]/90 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-md"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        initialMode={authMode}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={(user) => {
+          setCurrentUser(user);
+        }}
+      />
     </header>
   );
 }

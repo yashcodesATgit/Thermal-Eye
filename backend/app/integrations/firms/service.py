@@ -15,6 +15,7 @@ satellites with per-source failure isolation. If one satellite source
 fails, data from other sources is still persisted and the failure is
 reported in the summary.
 """
+import json
 import logging
 from typing import Any, Dict, List
 
@@ -23,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.integrations.firms.client import FIRMSClient, INDIA_BBOX
 from app.integrations.firms.normalizer import parse_firms_csv
+from app.ml.inference import ml_inference_service
 
 logger = logging.getLogger(__name__)
 
@@ -220,20 +222,22 @@ class FIRMSIngestionService:
         if not records:
             return 0, 0
 
-        # Upsert with source column for traceability.
+        # Upsert with source column for traceability and ML classification predictions.
         # RETURNING id gives us the exact set of rows that were inserted
         # (rows that matched ON CONFLICT are not returned).
         upsert_sql = text("""
             INSERT INTO hotspots (
                 id, latitude, longitude, type, brightness, confidence,
                 severity, timestamp, facility_id, status,
-                country, state, city, district, source, geometry
+                country, state, city, district, source, geometry,
+                ml_type, ml_confidence, model_version, ml_explanation
             )
             VALUES (
                 :id, :latitude, :longitude, :type, :brightness, :confidence,
                 :severity, :timestamp, :facility_id, :status,
                 :country, :state, :city, :district, :source,
-                ST_SetSRID(ST_MakePoint(CAST(:geom_lon AS float8), CAST(:geom_lat AS float8)), 4326)
+                ST_SetSRID(ST_MakePoint(CAST(:geom_lon AS float8), CAST(:geom_lat AS float8)), 4326),
+                :ml_type, :ml_confidence, :model_version, :ml_explanation
             )
             ON CONFLICT (id) DO NOTHING
             RETURNING id
@@ -244,12 +248,59 @@ class FIRMSIngestionService:
             params = {**record}
             params["geom_lon"] = record.get("longitude")
             params["geom_lat"] = record.get("latitude")
-            # Ensure source is present (normalizer always sets it)
             params.setdefault("source", None)
+
+            # Phase 6 — Execute ML inference with failure isolation
+            try:
+                pred = ml_inference_service.predict_observation(
+                    brightness=record.get("brightness", 300.0),
+                    confidence=record.get("confidence", 50.0),
+                    latitude=record.get("latitude", 0.0),
+                    longitude=record.get("longitude", 0.0),
+                    timestamp=record.get("timestamp"),
+                )
+                params["ml_type"] = pred.ml_type
+                params["ml_confidence"] = pred.ml_confidence
+                params["model_version"] = pred.model_version
+                params["ml_explanation"] = json.dumps(pred.ml_explanation) if pred.ml_explanation else None
+            except Exception as ml_exc:
+                logger.error("ML inference failed for observation %s (fallback to unknown): %s", record.get("id"), ml_exc)
+                params["ml_type"] = "unknown"
+                params["ml_confidence"] = 0.0
+                params["model_version"] = "xgboost-v1"
+                params["ml_explanation"] = json.dumps({"error": str(ml_exc)})
+
             result = await self._db.execute(upsert_sql, params)
             # RETURNING returns a row only when a row was actually inserted
             if result.fetchone() is not None:
                 inserted += 1
+
+                # Generate real-time alert for warning/critical or high ML confidence events
+                sev = params.get("severity") or "info"
+                if sev in ("warning", "critical") or params.get("ml_type") in ("industrial_fire", "wildfire"):
+                    alert_id = f"ALT-{params['id']}"
+                    title_label = (
+                        "Predicted Industrial Thermal Event"
+                        if params.get("ml_type") == "industrial_fire"
+                        else "High Thermal Anomaly Detected"
+                    )
+                    state_str = params.get("state") or "India"
+                    msg = f"{title_label} at {state_str} ({params.get('latitude')}, {params.get('longitude')}) with confidence {params.get('confidence', 0)}%."
+
+                    alert_sql = text("""
+                        INSERT INTO alerts (id, hotspot_id, facility_id, severity, title, message, timestamp, acknowledged)
+                        VALUES (:id, :hotspot_id, :facility_id, :severity, :title, :message, :timestamp, false)
+                        ON CONFLICT (id) DO NOTHING;
+                    """)
+                    await self._db.execute(alert_sql, {
+                        "id": alert_id,
+                        "hotspot_id": params["id"],
+                        "facility_id": params.get("facility_id"),
+                        "severity": sev if sev in ("critical", "warning", "info") else "warning",
+                        "title": title_label,
+                        "message": msg,
+                        "timestamp": params["timestamp"],
+                    })
 
         await self._db.commit()
 

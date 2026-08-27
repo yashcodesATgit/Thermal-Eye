@@ -55,6 +55,16 @@ class Settings(BaseSettings):
     #   VIIRS_NOAA20_NRT (NOAA-20, ~375 m resolution)
     #   VIIRS_NOAA21_NRT (NOAA-21, ~375 m resolution)
     firms_sources: str = "VIIRS_SNPP_NRT,VIIRS_NOAA20_NRT,VIIRS_NOAA21_NRT"
+    firms_sync_interval_hours: int = 1
+    firms_stale_threshold_hours: int = 3
+
+    # Redis Infrastructure Configuration
+    redis_url: str = "redis://localhost:6379/0"
+    ai_user_quota_per_hour: int = 100
+    ai_guest_quota_per_hour: int = 10
+    analytics_cache_ttl_seconds: int = 300
+    rate_limit_general_per_minute: int = 60
+    rate_limit_expensive_per_minute: int = 15
 
     @property
     def firms_source_list(self) -> list[str]:
@@ -64,6 +74,11 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.environment == "development"
+
+    # LLM Settings (Backend Only)
+    llm_provider: str = "gemini"
+    llm_model: str = "gemini-3.6-flash"
+    gemini_api_key: str = ""
 
 
 settings = Settings()  # type: ignore[call-arg]

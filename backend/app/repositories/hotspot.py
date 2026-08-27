@@ -40,6 +40,8 @@ class HotspotRepository:
         page_size: int = 100,
         type: Optional[str] = None,
         min_confidence: Optional[float] = None,
+        ml_type: Optional[str] = None,
+        min_ml_confidence: Optional[float] = None,
         severity: Optional[str] = None,
         state: Optional[str] = None,
         city: Optional[str] = None,
@@ -70,9 +72,15 @@ class HotspotRepository:
         if type is not None:
             query = query.where(Hotspot.type == type)
             count_query = count_query.where(Hotspot.type == type)
+        if ml_type is not None:
+            query = query.where(Hotspot.ml_type == ml_type)
+            count_query = count_query.where(Hotspot.ml_type == ml_type)
         if min_confidence is not None:
             query = query.where(Hotspot.confidence >= min_confidence)
             count_query = count_query.where(Hotspot.confidence >= min_confidence)
+        if min_ml_confidence is not None:
+            query = query.where(Hotspot.ml_confidence >= min_ml_confidence)
+            count_query = count_query.where(Hotspot.ml_confidence >= min_ml_confidence)
         if severity is not None:
             query = query.where(Hotspot.severity == severity)
             count_query = count_query.where(Hotspot.severity == severity)
@@ -85,12 +93,13 @@ class HotspotRepository:
         if country is not None:
             query = query.where(Hotspot.country == country)
             count_query = count_query.where(Hotspot.country == country)
+        ist_timestamp = func.timezone('Asia/Kolkata', Hotspot.timestamp)
         if start_date is not None:
-            query = query.where(Hotspot.timestamp >= start_date)
-            count_query = count_query.where(Hotspot.timestamp >= start_date)
+            query = query.where(ist_timestamp >= start_date)
+            count_query = count_query.where(ist_timestamp >= start_date)
         if end_date is not None:
-            query = query.where(Hotspot.timestamp <= end_date)
-            count_query = count_query.where(Hotspot.timestamp <= end_date)
+            query = query.where(ist_timestamp <= end_date)
+            count_query = count_query.where(ist_timestamp <= end_date)
         if near_lat is not None and near_lng is not None and radius_km is not None:
             point_geom = func.ST_SetSRID(func.ST_MakePoint(near_lng, near_lat), 4326)
             spatial_cond = func.ST_DWithin(
@@ -128,14 +137,14 @@ class HotspotRepository:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> list[dict]:
-        """Aggregate hotspot counts by day and type, excluding DEMO records by default."""
-        # Use PostgreSQL date_trunc or cast to DATE to group by day
-        date_trunc_day = func.date_trunc('day', Hotspot.timestamp)
+        # Aggregate by IST (Asia/Kolkata) calendar day to match Indian Standard Time
+        date_trunc_day = func.date_trunc('day', func.timezone('Asia/Kolkata', Hotspot.timestamp))
+        effective_type = func.coalesce(Hotspot.ml_type, Hotspot.type).label("type")
         query = select(
             date_trunc_day.label("day"),
-            Hotspot.type,
+            effective_type,
             func.count().label("count"),
-        ).group_by(date_trunc_day, Hotspot.type)
+        ).group_by(date_trunc_day, effective_type)
 
         if source is not None:
             query = query.where(Hotspot.source == source)

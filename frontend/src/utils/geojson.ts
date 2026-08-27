@@ -22,34 +22,42 @@ export interface GeoJSONFeatureCollection {
 export function hotspotsToGeoJSON(hotspots: Hotspot[]): GeoJSONFeatureCollection {
   return {
     type: 'FeatureCollection',
-    features: hotspots.map((h) => ({
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [h.longitude, h.latitude] as [number, number],
-      },
-      properties: {
-        id: h.id,
-        type: h.type,
-        brightness: h.brightness,
-        confidence: h.confidence,
-        severity: h.severity,
-        timestamp: h.timestamp,
-        facilityId: h.facilityId,
-        status: h.status,
-        // Normalized brightness for heatmap weight (0-1 range)
-        normalizedBrightness: Math.min(1, Math.max(0, (h.brightness - 240) / (360 - 240))),
-        // Combined weight using brightness and confidence
-        heatWeight: Math.min(
-          1,
-          Math.max(
-            0,
-            ((h.brightness - 240) / (360 - 240)) * 0.7 +
-              (h.confidence / 100) * 0.3,
+    features: hotspots.map((h) => {
+      const effectiveType = h.mlType || h.type;
+      return {
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [h.longitude, h.latitude] as [number, number],
+        },
+        properties: {
+          id: h.id,
+          type: effectiveType,
+          rawType: h.type,
+          mlType: h.mlType || 'unknown',
+          mlConfidence: h.mlConfidence ?? 0.0,
+          modelVersion: h.modelVersion || 'xgboost-v1',
+          mlExplanation: h.mlExplanation,
+          brightness: h.brightness,
+          confidence: h.confidence,
+          severity: h.severity,
+          timestamp: h.timestamp,
+          facilityId: h.facilityId,
+          status: h.status,
+          // Normalized brightness for heatmap weight (0-1 range)
+          normalizedBrightness: Math.min(1, Math.max(0, (h.brightness - 240) / (360 - 240))),
+          // Combined weight using brightness and confidence
+          heatWeight: Math.min(
+            1,
+            Math.max(
+              0,
+              ((h.brightness - 240) / (360 - 240)) * 0.7 +
+                (h.confidence / 100) * 0.3,
+            ),
           ),
-        ),
-      },
-    })),
+        },
+      };
+    }),
   };
 }
 
@@ -78,13 +86,13 @@ export function facilitiesToGeoJSON(facilities: Facility[]): GeoJSONFeatureColle
 }
 
 /**
- * Filter hotspots by type (confidence and date are filtered by backend).
+ * Filter hotspots by effective ML classification type.
  */
 export function filterHotspots(
   hotspots: Hotspot[],
   activeTypes: HotspotType[],
 ): Hotspot[] {
-  return hotspots.filter((h) => activeTypes.includes(h.type));
+  return hotspots.filter((h) => activeTypes.includes(h.mlType || h.type));
 }
 
 /**

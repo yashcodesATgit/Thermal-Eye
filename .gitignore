@@ -29,3 +29,22 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 frontend/src/img/Antigravity IDE.tar.gz
+
+# Python & Pytest Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Scratch & Large Benchmark Data
+scratch/
+*.csv
+.system_generated/
+logs/
+context.md
+SIH_Presentation_ThermalWatch.md
+
+

@@ -72,8 +72,8 @@ class HotspotService:
     ) -> dict:
         """Get 7-day activity ending on end_date."""
         from datetime import timedelta
-        # Compute start date (6 days prior)
-        start_date = end_date - timedelta(days=6)
+        # Compute start date (midnight 6 days prior to cover full 7-day range)
+        start_date = (end_date - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
         
         rows = await self.repo.get_activity(
             min_confidence=min_confidence,

@@ -15,7 +15,7 @@ from app.services.hotspot import HotspotService
 router = APIRouter()
 
 
-@router.get("/hotspots", response_model=PaginatedResponse[HotspotResponse])
+@router.get("/hotspots", response_model=PaginatedResponse[HotspotResponse], response_model_by_alias=True)
 async def list_hotspots(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(100, ge=1, le=2000, description="Items per page (max 2000 to support full India-wide multi-source FIRMS dataset)"),

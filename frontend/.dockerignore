@@ -1,0 +1,20 @@
+# Dependencies & Build Outputs
+node_modules/
+dist/
+build/
+.output/
+
+# Git
+.git
+.gitignore
+
+# Secrets & Environment Files
+.env
+.env.*
+*.local
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+*.log

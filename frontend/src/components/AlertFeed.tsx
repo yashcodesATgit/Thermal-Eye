@@ -1,21 +1,32 @@
 import React from 'react';
 import { Bell, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAlertsQuery } from '../services/queries/useAlertsQuery';
 import { useMapStore } from '../store/mapStore';
-import type { AlertSeverity } from '../types/alert';
+import type { AlertSeverity, Alert } from '../types/alert';
 
 export default function AlertFeed(): React.JSX.Element {
+  const navigate = useNavigate();
   const { data: alerts, isLoading } = useAlertsQuery();
   const selectHotspot = useMapStore((s) => s.selectHotspot);
   const selectFacility = useMapStore((s) => s.selectFacility);
+  const setSelectedDate = useMapStore((s) => s.setSelectedDate);
   const [isOpen, setIsOpen] = React.useState(false);
 
   const unackCount = alerts?.filter((a) => !a.acknowledged).length ?? 0;
 
-  const handleAlertClick = (hotspotId?: string, facilityId?: string) => {
-    if (hotspotId) selectHotspot(hotspotId);
-    else if (facilityId) selectFacility(facilityId);
+  const handleAlertClick = (alert: Alert) => {
+    if (alert.timestamp) {
+      const dateStr = alert.timestamp.slice(0, 10);
+      setSelectedDate(dateStr);
+    }
+    if (alert.hotspotId) {
+      selectHotspot(alert.hotspotId);
+    } else if (alert.facilityId) {
+      selectFacility(alert.facilityId);
+    }
     setIsOpen(false);
+    navigate('/');
   };
 
   const getIcon = (severity: AlertSeverity) => {
@@ -113,7 +124,7 @@ export default function AlertFeed(): React.JSX.Element {
                 <button
                   key={alert.id}
                   type="button"
-                  onClick={() => handleAlertClick(alert.hotspotId, alert.facilityId)}
+                  onClick={() => handleAlertClick(alert)}
                   className={`w-full text-left px-3 py-2 rounded-lg border-l-2 cursor-pointer ${getSeverityColor(alert.severity)}`}
                   style={{
                     backgroundColor: 'rgba(30,45,69,0.5)',

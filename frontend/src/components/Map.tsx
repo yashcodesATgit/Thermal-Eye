@@ -9,6 +9,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { ChevronDown, Layers, Check } from 'lucide-react';
 import { useHotspotsQuery } from '../services/queries/useHotspotsQuery';
 import { useFacilitiesQuery } from '../services/queries/useFacilitiesQuery';
+import { useFirmsStatusQuery } from '../services/queries/useFirmsStatusQuery';
 import { useMapStore } from '../store/mapStore';
 import {
   hotspotsToGeoJSON,
@@ -102,47 +103,35 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
     [filteredFacilities],
   );
 
-  // Safely clear selection if item is hidden by filters
-  useEffect(() => {
-    if (selectedHotspotId && filteredHotspots.length > 0) {
-      const exists = filteredHotspots.some((h) => h.id === selectedHotspotId);
-      if (!exists) selectHotspot(null);
-    }
-  }, [selectedHotspotId, filteredHotspots, selectHotspot]);
+  const { data: firmsStatus } = useFirmsStatusQuery();
 
-  useEffect(() => {
-    if (selectedFacilityId && filteredFacilities.length > 0) {
-      const exists = showFacilities && filteredFacilities.some((f) => f.id === selectedFacilityId);
-      if (!exists) selectFacility(null);
-    }
-  }, [selectedFacilityId, filteredFacilities, showFacilities, selectFacility]);
-
-  // Latest hotspot timestamp formatting for NASA FIRMS status banner
-  const latestTimestampDisplay = useMemo(() => {
-    if (!hotspots || hotspots.length === 0) return 'No data';
-    const latest = hotspots.reduce((a, b) =>
-      new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime() ? a : b,
-    );
-    const diffMs = Date.now() - new Date(latest.timestamp).getTime();
+  // FIRMS Sync Freshness formatting derived from backend lastSyncSuccessAt
+  const syncFreshnessDisplay = useMemo(() => {
+    if (!firmsStatus?.lastSyncSuccessAt) return 'No sync data';
+    const diffMs = Date.now() - new Date(firmsStatus.lastSyncSuccessAt).getTime();
+    if (diffMs < 0 || isNaN(diffMs)) return 'Just now';
+    const diffM = Math.floor(diffMs / 60000);
     const diffH = Math.floor(diffMs / 3600000);
-    if (diffH < 1) return `${Math.max(1, Math.floor(diffMs / 60000))}m ago`;
+
+    if (diffM < 2) return 'Just now';
+    if (diffM < 60) return `${diffM}m ago`;
     if (diffH < 24) return `${diffH}h ago`;
     return `${Math.floor(diffH / 24)}d ago`;
-  }, [hotspots]);
+  }, [firmsStatus?.lastSyncSuccessAt]);
 
   // Selected hotspot GeoJSON for highlight
   const selectedHotspotGeoJSON = useMemo(() => {
-    if (!selectedHotspotId || !filteredHotspots.length) return EMPTY_GEOJSON;
-    const selected = filteredHotspots.filter((h) => h.id === selectedHotspotId);
+    if (!selectedHotspotId) return EMPTY_GEOJSON;
+    const selected = (hotspots || []).filter((h) => h.id === selectedHotspotId);
     return selected.length > 0 ? hotspotsToGeoJSON(selected) : EMPTY_GEOJSON;
-  }, [selectedHotspotId, filteredHotspots]);
+  }, [selectedHotspotId, hotspots]);
 
   // Selected facility GeoJSON for highlight
   const selectedFacilityGeoJSON = useMemo(() => {
-    if (!selectedFacilityId || !filteredFacilities.length) return EMPTY_GEOJSON;
-    const selected = filteredFacilities.filter((f) => f.id === selectedFacilityId);
+    if (!selectedFacilityId) return EMPTY_GEOJSON;
+    const selected = (facilities || []).filter((f) => f.id === selectedFacilityId);
     return selected.length > 0 ? facilitiesToGeoJSON(selected) : EMPTY_GEOJSON;
-  }, [selectedFacilityId, filteredFacilities]);
+  }, [selectedFacilityId, facilities]);
 
   // Click handlers
   const handleMapClick = useCallback(
@@ -169,31 +158,35 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
     [selectHotspot, selectFacility],
   );
 
-  // Fly to selected feature
+  // Fly to selected feature (hotspot or facility)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    if (selectedHotspotId && filteredHotspots.length) {
-      const selected = filteredHotspots.find((h) => h.id === selectedHotspotId);
+    if (selectedHotspotId) {
+      const selected = (hotspots || []).find((h) => h.id === selectedHotspotId)
+        || filteredHotspots.find((h) => h.id === selectedHotspotId);
       if (selected) {
         map.flyTo({
           center: [selected.longitude, selected.latitude],
-          zoom: Math.max(map.getZoom(), 11),
+          zoom: 13.5,
           duration: 1200,
+          essential: true,
         });
       }
-    } else if (selectedFacilityId && filteredFacilities.length) {
-      const selected = filteredFacilities.find((f) => f.id === selectedFacilityId);
+    } else if (selectedFacilityId) {
+      const selected = (facilities || []).find((f) => f.id === selectedFacilityId)
+        || filteredFacilities.find((f) => f.id === selectedFacilityId);
       if (selected) {
         map.flyTo({
           center: [selected.longitude, selected.latitude],
-          zoom: Math.max(map.getZoom(), 11),
+          zoom: 13.5,
           duration: 1200,
+          essential: true,
         });
       }
     }
-  }, [selectedHotspotId, selectedFacilityId, filteredHotspots, filteredFacilities, mapRef]);
+  }, [selectedHotspotId, selectedFacilityId, filteredHotspots, filteredFacilities, hotspots, facilities]);
 
   // Cursor management
   const handleMouseEnter = useCallback(() => {
@@ -208,30 +201,35 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
 
   return (
     <div className="relative w-full h-full">
-      {/* ─── NASA FIRMS STATUS BANNER (Top-Left inside Map) ─── */}
-      <div
-        className="absolute top-3 left-3 z-20 rounded-xl p-2.5 flex items-center gap-3 select-none border border-[#1e293b] shadow-2xl backdrop-blur-md"
-        style={{ backgroundColor: 'rgba(15, 22, 35, 0.88)' }}
-      >
-        <div className="w-8 h-8 rounded-full bg-[#0B3D91] flex items-center justify-center font-black text-[10px] text-white tracking-tighter shrink-0 border border-[rgba(255,255,255,0.2)]">
+      {/* ─── COMPACT NASA FIRMS NRT STATUS CARD (Top-Left inside Map) ─── */}
+      <div className="absolute top-3 left-3 z-20 rounded-xl px-3 py-2 flex items-center gap-2.5 select-none border border-[#1e293b] shadow-2xl backdrop-blur-md bg-[#0F1623]/90 text-[#E8EDF5]">
+        <div className="w-7 h-7 rounded-full bg-[#0B3D91] flex items-center justify-center font-black text-[9px] text-white tracking-tighter shrink-0 border border-white/20">
           NASA
         </div>
-        <div>
-          <div className="flex items-center gap-1.5">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold text-[#E8EDF5] tracking-wide">
-              NASA FIRMS NRT Monitoring
+              NASA FIRMS NRT
+            </span>
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
+              firmsStatus?.status === 'live'
+                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'
+                : firmsStatus?.status === 'delayed'
+                ? 'bg-amber-950/60 text-amber-400 border border-amber-500/30'
+                : firmsStatus?.status === 'degraded'
+                ? 'bg-red-950/60 text-red-400 border border-red-500/30'
+                : 'bg-orange-950/60 text-orange-400 border border-orange-500/30'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                firmsStatus?.status === 'live' ? 'bg-emerald-400 animate-pulse' : firmsStatus?.status === 'delayed' ? 'bg-amber-400' : 'bg-red-400'
+              }`} />
+              {firmsStatus?.status ? firmsStatus.status.toUpperCase() : 'LIVE'}
             </span>
           </div>
-          <div className="text-[9px] font-mono text-[#8B9BB4] mt-0.5">
-            VIIRS SNPP • NOAA-20 • NOAA-21 (Near-Real-Time)
-          </div>
-          <div className="flex items-center gap-1.5 text-[9px] font-mono text-[#6B7280] mt-0.5">
-            <span>Last synchronized: {latestTimestampDisplay}</span>
+          <div className="text-[9px] font-mono text-[#7A8FA8] flex items-center gap-2">
+            <span>VIIRS SNPP • NOAA-20 • NOAA-21</span>
             <span>•</span>
-            <span className="flex items-center gap-1 text-[#10B981] font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block" />
-              SOURCE: OPERATIONAL
-            </span>
+            <span className="text-[#E8EDF5]">Synced {syncFreshnessDisplay}</span>
           </div>
         </div>
       </div>

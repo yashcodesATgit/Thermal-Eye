@@ -88,6 +88,11 @@ HOTSPOTS = [
 ]
 
 ALERTS = [
+    {"id": "ALT-010", "hotspotId": "HS-001", "facilityId": "FAC-001", "severity": "critical", "title": "Critical Industrial Flare", "message": "High intensity thermal event detected at Reliance Jamnagar Refinery.", "timestamp": "2026-08-27T08:35:00Z", "acknowledged": False},
+    {"id": "ALT-011", "hotspotId": "HS-012", "facilityId": "FAC-005", "severity": "critical", "title": "Severe Anomaly Monitored", "message": "Elevated flare emission detected at Nayara Energy Vadinar.", "timestamp": "2026-08-27T09:15:00Z", "acknowledged": False},
+    {"id": "ALT-012", "hotspotId": "HS-009", "facilityId": "FAC-004", "severity": "warning", "title": "Industrial Heat Event", "message": "Thermal anomaly detected near Essar Steel Hazira Complex.", "timestamp": "2026-08-27T07:20:00Z", "acknowledged": False},
+    {"id": "ALT-013", "hotspotId": "HS-007", "facilityId": "FAC-003", "severity": "warning", "title": "Elevated Flaring", "message": "Gas flare activity exceeding baseline at IOCL Vadodara.", "timestamp": "2026-08-27T04:10:00Z", "acknowledged": False},
+    {"id": "ALT-014", "hotspotId": "HS-024", "facilityId": "FAC-006", "severity": "info", "title": "Thermal Observation", "message": "Thermal activity monitored near ONGC Hazira Complex.", "timestamp": "2026-08-27T02:15:00Z", "acknowledged": False},
     {"id": "ALT-001", "hotspotId": "HS-001", "facilityId": "FAC-001", "severity": "critical", "title": "Critical Anomaly", "message": "Sustained high thermal signature at Reliance Jamnagar Refinery.", "timestamp": "2026-08-26T08:35:00Z", "acknowledged": False},
     {"id": "ALT-002", "hotspotId": "HS-012", "facilityId": "FAC-005", "severity": "critical", "title": "Severe Flare Detected", "message": "Abnormal flaring detected at Nayara Energy Vadinar.", "timestamp": "2026-08-26T09:05:00Z", "acknowledged": False},
     {"id": "ALT-003", "hotspotId": "HS-009", "facilityId": "FAC-004", "severity": "critical", "title": "Industrial Fire Alert", "message": "High intensity thermal event at Essar Steel Hazira.", "timestamp": "2026-08-26T07:20:00Z", "acknowledged": False},
@@ -165,11 +170,11 @@ async def seed_database():
                 country="India",
                 geometry=_make_point_wkt(h["longitude"], h["latitude"]),
             )
-            session.add(hotspot)
+            await session.merge(hotspot)
         await session.flush()
-        logger.info("Inserted %d hotspots", len(HOTSPOTS))
+        logger.info("Merged %d hotspots", len(HOTSPOTS))
 
-        # Insert alerts
+        # Insert / merge alerts
         for a in ALERTS:
             alert = Alert(
                 id=a["id"],
@@ -181,9 +186,9 @@ async def seed_database():
                 timestamp=_parse_ts(a["timestamp"]),
                 acknowledged=a["acknowledged"],
             )
-            session.add(alert)
+            await session.merge(alert)
         await session.flush()
-        logger.info("Inserted %d alerts", len(ALERTS))
+        logger.info("Merged %d alerts", len(ALERTS))
 
         await session.commit()
         logger.info("Database seeding complete!")

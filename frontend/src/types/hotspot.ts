@@ -13,13 +13,18 @@ export interface Hotspot {
   id: string;
   latitude: number;
   longitude: number;
-  type: HotspotType;
+  type: HotspotType;  // Raw FIRMS telemetry type
   brightness: number;
-  confidence: number;
+  confidence: number; // NASA FIRMS confidence
   severity: Severity;
   timestamp: string;
   facilityId: string | null;
   status: HotspotStatus;
+  // Phase 6 ML Prediction fields
+  mlType?: HotspotType;
+  mlConfidence?: number;
+  modelVersion?: string;
+  mlExplanation?: string | Record<string, number>;
 }
 
 export const HOTSPOT_COLORS: Record<HotspotType, string> = {
