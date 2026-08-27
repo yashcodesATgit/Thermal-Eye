@@ -4,7 +4,7 @@ import ReactMapGL, {
   Layer,
   MapRef,
 } from 'react-map-gl/maplibre';
-import type { MapLayerMouseEvent, StyleSpecification } from 'maplibre-gl';
+import type { MapLayerMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { ChevronDown, Layers, Check } from 'lucide-react';
 import { useHotspotsQuery } from '../services/queries/useHotspotsQuery';
@@ -14,39 +14,12 @@ import {
   hotspotsToGeoJSON,
   facilitiesToGeoJSON,
   filterHotspots,
+  filterFacilities,
 } from '../utils/geojson';
 import { HOTSPOT_COLORS } from '../types/hotspot';
-import { GUJARAT_VIEWPORT } from '../types/map';
-import { MAP_STYLES, getThunderforestTileUrl } from '../config/mapStyles';
+import { INDIA_VIEWPORT } from '../types/map';
+import { MAP_STYLES, buildMapStyleSpec } from '../config/mapStyles';
 import type { GeoJSONFeatureCollection } from '../utils/geojson';
-
-// Build dynamic Thunderforest map style spec for MapLibre (raster tiles)
-function buildMapStyle(apiKey: string, styleId: string): StyleSpecification {
-  const tileUrl = getThunderforestTileUrl(styleId, apiKey);
-
-  return {
-    version: 8,
-    name: `Thunderforest ${styleId}`,
-    sources: {
-      'thunderforest-basemap': {
-        type: 'raster',
-        tiles: [tileUrl],
-        tileSize: 256,
-        minzoom: 0,
-        maxzoom: 22,
-        attribution:
-          '&copy; <a href="https://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    },
-    layers: [
-      {
-        id: 'thunderforest-basemap-layer',
-        type: 'raster',
-        source: 'thunderforest-basemap',
-      },
-    ],
-  };
-}
 
 // Empty GeoJSON for initial/fallback state
 const EMPTY_GEOJSON: GeoJSONFeatureCollection = {
@@ -59,16 +32,16 @@ interface MapComponentProps {
 }
 
 export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
-  const apiKey = import.meta.env.VITE_THUNDERFOREST_API_KEY;
-
   // Zustand selectors
   const selectedHotspotId = useMapStore((s) => s.selectedHotspotId);
   const selectedFacilityId = useMapStore((s) => s.selectedFacilityId);
   const activeHotspotTypes = useMapStore((s) => s.activeHotspotTypes);
+  const activeFacilityTypes = useMapStore((s) => s.activeFacilityTypes);
   const minimumConfidence = useMapStore((s) => s.minimumConfidence);
   const selectedDate = useMapStore((s) => s.selectedDate);
   const showHeatmap = useMapStore((s) => s.showHeatmap);
   const showFacilities = useMapStore((s) => s.showFacilities);
+  const showRiskZones = useMapStore((s) => s.showRiskZones);
   const selectHotspot = useMapStore((s) => s.selectHotspot);
   const selectFacility = useMapStore((s) => s.selectFacility);
   const mapStyleId = useMapStore((s) => s.mapStyle);
@@ -94,7 +67,7 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
   }, [isStyleDropdownOpen]);
 
   // TanStack Query data
-  const { data: hotspots } = useHotspotsQuery();
+  const { data: hotspots } = useHotspotsQuery(selectedDate, minimumConfidence);
   const { data: facilities } = useFacilitiesQuery();
 
   // Active map style configuration object
@@ -102,22 +75,22 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
     return MAP_STYLES.find((s) => s.id === mapStyleId) || MAP_STYLES[0];
   }, [mapStyleId]);
 
-  // Dynamic MapLibre style spec memoized by apiKey & mapStyleId
+  // Dynamic MapLibre style spec memoized by activeStyleOption
   const mapStyleSpec = useMemo(() => {
-    if (!apiKey || apiKey === 'YOUR_KEY_HERE') return null;
-    return buildMapStyle(apiKey, activeStyleOption.styleId);
-  }, [apiKey, activeStyleOption.styleId]);
+    return buildMapStyleSpec(activeStyleOption);
+  }, [activeStyleOption]);
 
-  // Filtered + converted GeoJSON (memoized)
+  // Filtered Hotspots (memoized)
   const filteredHotspots = useMemo(() => {
     if (!hotspots) return [];
-    return filterHotspots(
-      hotspots,
-      activeHotspotTypes,
-      minimumConfidence,
-      selectedDate,
-    );
-  }, [hotspots, activeHotspotTypes, minimumConfidence, selectedDate]);
+    return filterHotspots(hotspots, activeHotspotTypes);
+  }, [hotspots, activeHotspotTypes]);
+
+  // Filtered Facilities (memoized)
+  const filteredFacilities = useMemo(() => {
+    if (!facilities) return [];
+    return filterFacilities(facilities, activeFacilityTypes);
+  }, [facilities, activeFacilityTypes]);
 
   const hotspotsGeoJSON = useMemo(
     () => (filteredHotspots.length > 0 ? hotspotsToGeoJSON(filteredHotspots) : EMPTY_GEOJSON),
@@ -125,9 +98,37 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
   );
 
   const facilitiesGeoJSON = useMemo(
-    () => (facilities ? facilitiesToGeoJSON(facilities) : EMPTY_GEOJSON),
-    [facilities],
+    () => (filteredFacilities.length > 0 ? facilitiesToGeoJSON(filteredFacilities) : EMPTY_GEOJSON),
+    [filteredFacilities],
   );
+
+  // Safely clear selection if item is hidden by filters
+  useEffect(() => {
+    if (selectedHotspotId && filteredHotspots.length > 0) {
+      const exists = filteredHotspots.some((h) => h.id === selectedHotspotId);
+      if (!exists) selectHotspot(null);
+    }
+  }, [selectedHotspotId, filteredHotspots, selectHotspot]);
+
+  useEffect(() => {
+    if (selectedFacilityId && filteredFacilities.length > 0) {
+      const exists = showFacilities && filteredFacilities.some((f) => f.id === selectedFacilityId);
+      if (!exists) selectFacility(null);
+    }
+  }, [selectedFacilityId, filteredFacilities, showFacilities, selectFacility]);
+
+  // Latest hotspot timestamp formatting for NASA FIRMS status banner
+  const latestTimestampDisplay = useMemo(() => {
+    if (!hotspots || hotspots.length === 0) return 'No data';
+    const latest = hotspots.reduce((a, b) =>
+      new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime() ? a : b,
+    );
+    const diffMs = Date.now() - new Date(latest.timestamp).getTime();
+    const diffH = Math.floor(diffMs / 3600000);
+    if (diffH < 1) return `${Math.max(1, Math.floor(diffMs / 60000))}m ago`;
+    if (diffH < 24) return `${diffH}h ago`;
+    return `${Math.floor(diffH / 24)}d ago`;
+  }, [hotspots]);
 
   // Selected hotspot GeoJSON for highlight
   const selectedHotspotGeoJSON = useMemo(() => {
@@ -138,10 +139,10 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
 
   // Selected facility GeoJSON for highlight
   const selectedFacilityGeoJSON = useMemo(() => {
-    if (!selectedFacilityId || !facilities) return EMPTY_GEOJSON;
-    const selected = facilities.filter((f) => f.id === selectedFacilityId);
+    if (!selectedFacilityId || !filteredFacilities.length) return EMPTY_GEOJSON;
+    const selected = filteredFacilities.filter((f) => f.id === selectedFacilityId);
     return selected.length > 0 ? facilitiesToGeoJSON(selected) : EMPTY_GEOJSON;
-  }, [selectedFacilityId, facilities]);
+  }, [selectedFacilityId, filteredFacilities]);
 
   // Click handlers
   const handleMapClick = useCallback(
@@ -169,7 +170,7 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
   );
 
   // Fly to selected feature
-  React.useEffect(() => {
+  useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -182,8 +183,8 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
           duration: 1200,
         });
       }
-    } else if (selectedFacilityId && facilities) {
-      const selected = facilities.find((f) => f.id === selectedFacilityId);
+    } else if (selectedFacilityId && filteredFacilities.length) {
+      const selected = filteredFacilities.find((f) => f.id === selectedFacilityId);
       if (selected) {
         map.flyTo({
           center: [selected.longitude, selected.latitude],
@@ -192,7 +193,7 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
         });
       }
     }
-  }, [selectedHotspotId, selectedFacilityId, filteredHotspots, facilities, mapRef]);
+  }, [selectedHotspotId, selectedFacilityId, filteredHotspots, filteredFacilities, mapRef]);
 
   // Cursor management
   const handleMouseEnter = useCallback(() => {
@@ -205,34 +206,44 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
     if (map) map.getCanvas().style.cursor = '';
   }, [mapRef]);
 
-  // Missing API key error state
-  if (!apiKey || apiKey === 'YOUR_KEY_HERE') {
-    return (
-      <div className="relative w-full h-full bg-[#080C14] flex items-center justify-center">
-        <div className="bg-[#0F1623] border border-[#FF4444]/40 rounded-lg p-6 max-w-md text-center">
-          <p className="text-[#FF4444] font-bold text-lg mb-2">
-            Missing Thunderforest API Key
-          </p>
-          <p className="text-[#7A8FA8] text-sm">
-            Set <code className="text-[#E8EDF5] font-mono bg-[#162033] px-1.5 py-0.5 rounded">VITE_THUNDERFOREST_API_KEY</code> in
-            your <code className="text-[#E8EDF5] font-mono bg-[#162033] px-1.5 py-0.5 rounded">.env</code> file
-            and restart the dev server.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative w-full h-full">
+      {/* ─── NASA FIRMS STATUS BANNER (Top-Left inside Map) ─── */}
+      <div
+        className="absolute top-3 left-3 z-20 rounded-xl p-2.5 flex items-center gap-3 select-none border border-[#1e293b] shadow-2xl backdrop-blur-md"
+        style={{ backgroundColor: 'rgba(15, 22, 35, 0.88)' }}
+      >
+        <div className="w-8 h-8 rounded-full bg-[#0B3D91] flex items-center justify-center font-black text-[10px] text-white tracking-tighter shrink-0 border border-[rgba(255,255,255,0.2)]">
+          NASA
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-[#E8EDF5] tracking-wide">
+              NASA FIRMS NRT Monitoring
+            </span>
+          </div>
+          <div className="text-[9px] font-mono text-[#8B9BB4] mt-0.5">
+            VIIRS SNPP • NOAA-20 • NOAA-21 (Near-Real-Time)
+          </div>
+          <div className="flex items-center gap-1.5 text-[9px] font-mono text-[#6B7280] mt-0.5">
+            <span>Last synchronized: {latestTimestampDisplay}</span>
+            <span>•</span>
+            <span className="flex items-center gap-1 text-[#10B981] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block" />
+              SOURCE: OPERATIONAL
+            </span>
+          </div>
+        </div>
+      </div>
+
       <ReactMapGL
         ref={mapRef}
         initialViewState={{
-          longitude: GUJARAT_VIEWPORT.longitude,
-          latitude: GUJARAT_VIEWPORT.latitude,
-          zoom: GUJARAT_VIEWPORT.zoom,
+          longitude: INDIA_VIEWPORT.longitude,
+          latitude: INDIA_VIEWPORT.latitude,
+          zoom: INDIA_VIEWPORT.zoom,
         }}
-        mapStyle={mapStyleSpec!}
+        mapStyle={mapStyleSpec}
         onClick={handleMapClick}
         interactiveLayerIds={['hotspot-points', 'facility-points']}
         onMouseEnter={handleMouseEnter}
@@ -240,6 +251,34 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
         attributionControl={true}
         reuseMaps
       >
+        {/* ---- RISK ZONES LAYER ---- */}
+        {showRiskZones && (
+          <Source
+            id="hotspots-risk-zones"
+            type="geojson"
+            data={hotspotsGeoJSON}
+          >
+            <Layer
+              id="hotspot-risk-zone-fill"
+              type="circle"
+              paint={{
+                'circle-radius': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  4, 12,
+                  8, 22,
+                  12, 38,
+                  15, 55,
+                ],
+                'circle-color': 'rgba(239, 68, 68, 0.08)',
+                'circle-stroke-width': 1.5,
+                'circle-stroke-color': 'rgba(239, 68, 68, 0.45)',
+              }}
+            />
+          </Source>
+        )}
+
         {/* ---- HEATMAP LAYER ---- */}
         {showHeatmap && (
           <Source
@@ -450,39 +489,27 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
         </Source>
       </ReactMapGL>
 
-      {/* Dynamic Thunderforest Basemap Selector Dropdown */}
-      <div className="absolute top-4 right-4 z-20" ref={dropdownRef}>
+      {/* Dynamic Basemap Selector Dropdown */}
+      <div className="absolute top-3 right-3 z-20" ref={dropdownRef}>
         <div className="relative">
           <button
             type="button"
             onClick={() => setIsStyleDropdownOpen(!isStyleDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xl transition-all cursor-pointer"
-            style={{
-              backgroundColor: '#111827',
-              border: isStyleDropdownOpen ? '1px solid #2D7DD2' : '1px solid #1e293b',
-              color: '#E8EDF5',
-            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xl transition-all cursor-pointer border border-[#1e293b] bg-[#111827] text-[#E8EDF5]"
           >
-            <Layers style={{ width: 14, height: 14, color: '#2D7DD2' }} />
+            <Layers className="w-3.5 h-3.5 text-[#2D7DD2]" />
             <span>{activeStyleOption.label}</span>
-            <ChevronDown style={{ width: 12, height: 12, color: '#6B7280' }} />
+            <ChevronDown className="w-3 h-3 text-[#6B7280]" />
           </button>
 
           {/* Dropdown Options List */}
           {isStyleDropdownOpen && (
             <div
-              className="absolute right-0 top-full mt-1.5 z-50 rounded-xl shadow-2xl overflow-hidden py-1"
-              style={{
-                width: 220,
-                backgroundColor: '#111827',
-                border: '1px solid #1e293b',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.9)',
-              }}
+              className="absolute right-0 top-full mt-1.5 z-50 rounded-xl shadow-2xl overflow-hidden py-1 w-60 bg-[#111827] border border-[#1e293b]"
+              style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.9)' }}
             >
-              <div
-                className="px-3 py-1.5 border-b border-[#1e293b] text-[10px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center justify-between"
-              >
-                <span>THUNDERFOREST BASEMAPS</span>
+              <div className="px-3 py-1.5 border-b border-[#1e293b] text-[10px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center justify-between">
+                <span>BASEMAP THEMES</span>
               </div>
               <div className="py-1">
                 {MAP_STYLES.map((style) => {
@@ -502,26 +529,23 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
                     >
                       <div>
                         <div
+                          className="flex items-center gap-1.5 text-xs"
                           style={{
-                            fontSize: 12,
                             fontWeight: isSelected ? 700 : 500,
                             color: isSelected ? '#2D7DD2' : '#E8EDF5',
                           }}
                         >
-                          {style.label}
+                          <span>{style.label}</span>
+                          <span className="text-[9px] px-1 py-0.2 rounded font-normal bg-[rgba(255,255,255,0.06)] text-[#94A3B8]">
+                            {style.provider}
+                          </span>
                         </div>
-                        <div
-                          style={{
-                            fontSize: 10,
-                            color: '#6B7280',
-                            marginTop: 1,
-                          }}
-                        >
+                        <div className="text-[10px] text-[#6B7280] mt-0.5">
                           {style.description}
                         </div>
                       </div>
                       {isSelected && (
-                        <Check style={{ width: 14, height: 14, color: '#2D7DD2', marginTop: 2, flexShrink: 0 }} />
+                        <Check className="w-3.5 h-3.5 text-[#2D7DD2] mt-0.5 shrink-0" />
                       )}
                     </button>
                   );

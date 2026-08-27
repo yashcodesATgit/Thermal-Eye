@@ -1,5 +1,5 @@
 import type { Hotspot, HotspotType } from '../types/hotspot';
-import type { Facility } from '../types/facility';
+import type { Facility, FacilityType } from '../types/facility';
 
 export interface GeoJSONFeature {
   type: 'Feature';
@@ -78,20 +78,21 @@ export function facilitiesToGeoJSON(facilities: Facility[]): GeoJSONFeatureColle
 }
 
 /**
- * Filter hotspots by type, confidence, and date.
+ * Filter hotspots by type (confidence and date are filtered by backend).
  */
 export function filterHotspots(
   hotspots: Hotspot[],
   activeTypes: HotspotType[],
-  minimumConfidence: number,
-  selectedDate: string,
 ): Hotspot[] {
-  return hotspots.filter((h) => {
-    if (!activeTypes.includes(h.type)) return false;
-    if (h.confidence < minimumConfidence) return false;
-    // Filter by selected date: show hotspots from that day and before
-    const hotspotDate = h.timestamp.slice(0, 10);
-    if (hotspotDate > selectedDate) return false;
-    return true;
-  });
+  return hotspots.filter((h) => activeTypes.includes(h.type));
+}
+
+/**
+ * Filter facilities by facility type.
+ */
+export function filterFacilities(
+  facilities: Facility[],
+  activeTypes: FacilityType[],
+): Facility[] {
+  return facilities.filter((f) => activeTypes.includes(f.type));
 }

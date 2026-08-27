@@ -82,3 +82,22 @@ button {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   color: #E8EDF5;
 }
+
+/* Pop-in-out pulsing animation for critical risk badges */
+@keyframes pop-in-out {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 4px rgba(255, 107, 0, 0.4);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 14px rgba(255, 107, 0, 0.9);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in-out {
+  animation: pop-in-out 1.2s ease-in-out infinite;
+  display: inline-block;
+}

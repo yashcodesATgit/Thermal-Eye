@@ -1,6 +1,14 @@
 import type { Alert } from '../types/alert';
-import mockAlerts from '../data/mock_alerts.json';
+import api from './api';
 
+/**
+ * Fetch alert data from FastAPI backend.
+ * Phase 4: calls GET /api/v1/alerts
+ */
 export async function fetchAlerts(): Promise<Alert[]> {
-  return Promise.resolve(mockAlerts as Alert[]);
+  const response = await api.get('/api/v1/alerts', {
+    params: { page_size: 500 },
+  });
+  return response.data.data as Alert[];
 }
+

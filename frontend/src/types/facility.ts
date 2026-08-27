@@ -14,6 +14,7 @@ export interface Facility {
   city: string;
   state: string;
   country: string;
+  source?: string;
 }
 
 export const FACILITY_LABELS: Record<FacilityType, string> = {

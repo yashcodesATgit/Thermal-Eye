@@ -1,7 +1,11 @@
-import React from 'react';
-import { Plus, Minus, Navigation } from 'lucide-react';
+import { Plus, Minus, RotateCcw, Navigation } from 'lucide-react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import { GUJARAT_VIEWPORT } from '../types/map';
+import {
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  DEFAULT_MAP_BEARING,
+  DEFAULT_MAP_PITCH,
+} from '../types/map';
 
 interface MapControlsProps {
   mapRef: React.RefObject<MapRef>;
@@ -18,87 +22,90 @@ export default function MapControls({ mapRef }: MapControlsProps): React.JSX.Ele
     if (map) map.zoomOut({ duration: 300 });
   };
 
-  const handleReset = () => {
+  const handleResetMap = () => {
     const map = mapRef.current;
     if (map) {
       map.flyTo({
-        center: [GUJARAT_VIEWPORT.longitude, GUJARAT_VIEWPORT.latitude],
-        zoom: GUJARAT_VIEWPORT.zoom,
+        center: DEFAULT_MAP_CENTER,
+        zoom: DEFAULT_MAP_ZOOM,
+        bearing: DEFAULT_MAP_BEARING,
+        pitch: DEFAULT_MAP_PITCH,
         duration: 1200,
       });
     }
   };
 
+  const handleLocate = () => {
+    const map = mapRef.current;
+    if (map && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          map.flyTo({
+            center: [position.coords.longitude, position.coords.latitude],
+            zoom: 12,
+            duration: 1200,
+          });
+        },
+        () => {
+          handleResetMap();
+        },
+      );
+    } else {
+      handleResetMap();
+    }
+  };
+
   return (
     <div
-      className="absolute left-4 z-20 flex flex-col overflow-hidden"
+      className="absolute left-3 bottom-3 z-20 flex flex-col overflow-hidden select-none rounded-xl"
       style={{
-        bottom: 16,
         backgroundColor: '#111827',
         border: '1px solid #1e293b',
-        borderRadius: 8,
         boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
       }}
     >
+      {/* Zoom In */}
       <button
         type="button"
         title="Zoom In"
         aria-label="Zoom In"
         onClick={handleZoomIn}
-        style={{
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#111827',
-          color: '#E8EDF5',
-          borderBottom: '1px solid #1e293b',
-          borderTop: 'none',
-          borderLeft: 'none',
-          borderRight: 'none',
-        }}
+        className="w-9 h-9 flex items-center justify-center bg-[#111827] text-[#E8EDF5] hover:bg-[#1E2D45] transition-colors border-b border-[#1e293b] cursor-pointer"
       >
-        <Plus style={{ width: 16, height: 16 }} />
+        <Plus className="w-4 h-4" />
       </button>
+
+      {/* Zoom Out */}
       <button
         type="button"
         title="Zoom Out"
         aria-label="Zoom Out"
         onClick={handleZoomOut}
-        style={{
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#111827',
-          color: '#E8EDF5',
-          borderBottom: '1px solid #1e293b',
-          borderTop: 'none',
-          borderLeft: 'none',
-          borderRight: 'none',
-        }}
+        className="w-9 h-9 flex items-center justify-center bg-[#111827] text-[#E8EDF5] hover:bg-[#1E2D45] transition-colors border-b border-[#1e293b] cursor-pointer"
       >
-        <Minus style={{ width: 16, height: 16 }} />
+        <Minus className="w-4 h-4" />
       </button>
+
+      {/* Reset Map */}
       <button
         type="button"
-        title="Reset Location"
-        aria-label="Reset Location"
-        onClick={handleReset}
-        style={{
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#111827',
-          color: '#E8EDF5',
-          border: 'none',
-        }}
+        title="Reset Map"
+        aria-label="Reset Map"
+        onClick={handleResetMap}
+        className="w-9 h-9 flex items-center justify-center bg-[#111827] text-[#2D7DD2] hover:bg-[#1E2D45] transition-colors border-b border-[#1e293b] cursor-pointer"
       >
-        <Navigation style={{ width: 14, height: 14 }} />
+        <RotateCcw className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Locate */}
+      <button
+        type="button"
+        title="Locate"
+        aria-label="Locate"
+        onClick={handleLocate}
+        className="w-9 h-9 flex items-center justify-center bg-[#111827] text-[#E8EDF5] hover:bg-[#1E2D45] transition-colors cursor-pointer"
+      >
+        <Navigation className="w-3.5 h-3.5" />
       </button>
     </div>
   );

@@ -1,25 +1,63 @@
 # ThermalWatch — Project Context
 
 ## 1. Project Overview
-ThermalWatch is a specialized geospatial thermal intelligence platform engineered to monitor, visualize, and classify thermal anomalies (industrial fires, gas flares, agricultural burns, wildfires, and unknown heat sources) across critical regional assets and industrial corridors.
+ThermalWatch is an AI-enabled geospatial system for **detecting, classifying, and monitoring industrial fires and persistent thermal sources** using NASA FIRMS satellite data, industrial infrastructure databases, and (future) land-cover/satellite imagery context.
 
-The platform combines high-resolution geographic basemaps with thermal anomaly observations, facility proximity metrics, historical tracking, and interactive operational dashboards.
+The platform ingests near-real-time thermal anomaly observations from NASA FIRMS VIIRS/MODIS instruments, stores them in a PostGIS-enabled database, and visualizes them as interactive map overlays alongside known industrial facilities.
 
-**Important Note**: Through Phase 3C, the frontend application is **fully built and frozen**. All thermal anomaly observations, facility records, and system alerts are currently backed by deterministic **DEMO/MOCK data services**. No live backend server or live satellite feed is connected yet.
+- **Current Status**:
+- **Frontend**: Integrated with real FastAPI backend via `axios` and `TanStack Query`.
+- **Backend**: FastAPI running on port 8000, connected to Supabase PostgreSQL + PostGIS.
+- **Thermal Data**: **REAL NASA FIRMS VIIRS satellite data ingested via `POST /api/v1/ingestion/firms`**. All real observations stored as `type = unknown` until Phase 6 ML classification.
+- **ML Classification**: **NOT YET IMPLEMENTED**. Deferred to Phase 6.
 
 ---
 
 ## 2. Current Project Status
-- **Phases Completed**: Phase 0 (Setup), Phase 1 (UI Shell), Phase 1B (Audit), Phase 2 (MapLibre + Thunderforest), Phase 3 (Intelligence Layer & Filtering), Phase 3B (Visual Alignment), Phase 3C (Full Frontend Audit & Optimization), Phase 3D (Context Documentation).
-- **Frontend Status**: **FROZEN**. Visual layout, map layers, user interactions, routing, client state management, and type definitions are locked and validated.
-- **Backend Status**: **NOT IMPLEMENTED YET**. Phase 4 will establish the FastAPI backend foundation.
+- **Phases Completed**:
+  - Phase 0 (Setup)
+  - Phase 1 (UI Shell)
+  - Phase 1B (Audit)
+  - Phase 2 (MapLibre + Thunderforest)
+  - Phase 3 (Intelligence Layer & Filtering)
+  - Phase 3B (Visual Alignment)
+  - Phase 3C (Full Frontend Audit & Optimization)
+  - Phase 3D (Context Documentation)
+  - **Phase 4 (Backend Foundation + Supabase/PostGIS Integration)**
+  - **Phase 4B (Backend Foundation Audit & Frontend Integration Audit)**
+  - **Phase 5 (NASA FIRMS Real Satellite Data Integration)**
+  - **Phase 5E (Problem-Statement Alignment & Data Sync)**
+  - **Phase 5F (Final FIRMS Data + Classification Semantics + Timeline Audit)** ← COMPLETED
+- **Frontend Status**: Integrated with real FastAPI backend via TanStack Query.
+- **Backend Status**: FastAPI server with Router-Schema-Service-Repository architecture, PostGIS geospatial queries, Supabase integration, and live India-wide multi-source NASA FIRMS satellite ingestion.
+- **ML Status**: **NOT IMPLEMENTED**. All real FIRMS observations are stored as `type = unknown`.
+- **FIRMS Data**: Real NASA FIRMS NRT observations (VIIRS_SNPP_NRT, VIIRS_NOAA20_NRT, VIIRS_NOAA21_NRT).
+- **Classification**: Real FIRMS observations remain `type = unknown` until Phase 6 ML. Demo data isolated.
+- **Temporal Model**: Selected date + 7-day historical window ending on selected date.
+- **Geographic Scope**: India-wide (`state = ALL`, `city = ALL` by default).
+- **Facilities**: Separate static industrial infrastructure context.
+- **Scientific Limitation**: FIRMS detects thermal anomalies, not automatically verified fires.
+- **Next Phase**: **Phase 6 (ML Classification)**.
 
 ---
 
 ## 3. Product Goal
-The ultimate goal of ThermalWatch is to provide near-real-time satellite-driven thermal monitoring and predictive intelligence for industrial assets, environmental safety teams, and emergency responders.
+ThermalWatch exists to **detect and classify industrial fires and persistent thermal sources, while distinguishing them from other thermal anomalies** (wildfires, agricultural burning, gas flares, mining activity).
 
-The system will ingest thermal observation telemetry (e.g., NASA FIRMS MODIS/VIIRS), process and classify heat sources via machine learning (XGBoost/SHAP), compute severity/confidence scores, evaluate proximity to industrial facilities (refineries, power plants, LNG terminals), and dispatch actionable alerts through a mission-control web interface.
+The system ingests near-real-time thermal anomaly observations from NASA FIRMS VIIRS/MODIS instruments, evaluates proximity to known industrial infrastructure, and (in Phase 6) will classify thermal anomalies via machine learning.
+
+### Product Hierarchy
+```
+Industrial thermal activity (primary focus)
+    ├── Industrial Fire
+    ├── Gas Flare
+    └── Mining / Persistent Thermal Source
+        vs.
+Non-industrial / natural thermal activity
+    ├── Wildfire
+    ├── Agricultural Burning
+    └── Unknown
+```
 
 ---
 
@@ -27,7 +65,7 @@ The system will ingest thermal observation telemetry (e.g., NASA FIRMS MODIS/VII
 ThermalWatch operates on three distinct conceptual layers:
 
 1. **GEOGRAPHIC BASEMAP (Thunderforest)**: Provides cartographic context (cities, roads, coastlines, terrain, transportation networks). Thunderforest provides background geographic rendering; it does *not* detect fires or provide thermal data.
-2. **THERMAL OBSERVATIONS (Future Satellite / FIRMS Pipeline)**: Ingests raw thermal coordinates, brightness measurements (Kelvin), detection confidence, and acquisition timestamps.
+2. **THERMAL OBSERVATIONS (Supabase PostGIS / Future Satellite FIRMS Pipeline)**: Stores and ingests raw thermal coordinates `POINT(longitude latitude)`, brightness measurements (Kelvin), detection confidence, and acquisition timestamps.
 3. **THERMALWATCH INTELLIGENCE LAYER**: Merges cartographic basemaps with thermal telemetry, classifies heat signatures, computes risk metrics, correlates anomalies with nearby industrial facilities, and renders a multi-layer interactive intelligence map.
 
 ```
@@ -60,8 +98,9 @@ ThermalWatch operates on three distinct conceptual layers:
 
 ---
 
-## 5. Current Technology Stack
+## 5. Technology Stack
 
+### Frontend
 | Layer | Technology | Version | Purpose |
 |---|---|---|---|
 | Core Framework | React | `18.3.1` | Component UI structure |
@@ -75,581 +114,494 @@ ThermalWatch operates on three distinct conceptual layers:
 | Client State | Zustand | `^5.0.15` | Global UI client state management |
 | Router | React Router DOM | `6.28.0` | Single Page Application routing |
 | Icons | Lucide React | `0.469.0` | UI icon library |
-| Utilities | date-fns, axios | `4.1.0`, `1.7.9` | Date formatting & HTTP client (ready for Phase 4) |
+| HTTP Client | Axios | `^1.7.9` | Asynchronous API requests to FastAPI backend |
+
+### Backend (Phase 4/4B)
+| Layer | Technology | Version | Purpose |
+|---|---|---|---|
+| Web Framework | FastAPI | `0.115.6` | Asynchronous REST API framework |
+| Server | Uvicorn | `0.34.0` | ASGI web server |
+| ORM | SQLAlchemy (asyncio) | `2.0.36` | Asynchronous database ORM |
+| Database Driver | asyncpg | `0.30.0` | High-performance PostgreSQL async driver |
+| GIS Extension | GeoAlchemy2 | `0.15.2` | Spatial PostGIS types & functions for SQLAlchemy |
+| Data Validation | Pydantic | `2.13.4` | Data schemas & camelCase serialization |
+| Configuration | Pydantic Settings | `2.7.0` | Environment settings management |
+| Database Cloud | Supabase PostgreSQL | PostGIS 3.x | Cloud database & spatial storage |
+| Migration Tool | Alembic | `1.14.1` | Database migration framework |
+| Test Suite | pytest | `8.3.4` | Asynchronous API unit & integration testing |
 
 ---
 
-## 6. Frontend Architecture
-The application is structured around a **full-bleed map surface with floating UI overlays**.
+## 6. Architecture & Data Flow
 
-- The `MapLibre` map component dominates the entire viewport (`100vw` × `100vh`).
-- Navigation bar (`Navbar`) stays fixed at the top (`height: 56px`, `zIndex: 30`).
-- Floating overlay panels float over the map with fixed pixel positioning and high z-index values (`zIndex: 20`):
-  - **Legend**: Top-left (`top: 16px`, `left: 16px`, width: `168px`, max-height: `calc(100vh - 230px)`).
-  - **MapControls**: Bottom-left corner (`bottom: 16px`, `left: 16px`).
-  - **Basemap Selector Dropdown**: Top-right corner (`top: 16px`, `right: 16px`).
-  - **Alert Feed Button & Popover**: Top-right corner (`top: 16px`, `right: 176px`).
-  - **Timeline**: Bottom-center attached flush to screen bottom (`bottom: 0px`, `left: 50%`, `transform: translateX(-50%)`, height: `52px`).
-  - **RightPanel**: Floating right intelligence drawer (`top: 8px`, `right: 8px`, `bottom: 8px`, width: `340px`). Closed by default upon initial app startup.
-
----
-
-## 7. Folder Structure
-```
-frontend/
-├── public/
-├── src/
-│   ├── components/
-│   │   ├── AlertFeed.tsx          # Floating alert notification button & popover list
-│   │   ├── IncidentTable.tsx       # Searchable, filterable, sortable incident table
-│   │   ├── Legend.tsx              # Map legend (types, facilities, heatmap, min confidence)
-│   │   ├── Map.tsx                 # Core MapLibre GL map, sources, layers, basemap selector
-│   │   ├── MapControls.tsx         # Zoom (+/-) and locate map control buttons
-│   │   ├── Navbar.tsx              # Top navigation header & date selector popover
-│   │   ├── RightPanel.tsx          # Intelligence drawer (hotspot & facility telemetry)
-│   │   └── Timeline.tsx            # Bottom date timeline node track (-6D to TODAY)
-│   ├── config/
-│   │   └── mapStyles.ts            # Centralized Thunderforest basemap configuration
-│   ├── data/
-│   │   ├── mock_alerts.json        # Demo alert feed records
-│   │   ├── mock_facilities.json    # Demo industrial facility records (Gujarat)
-│   │   └── mock_hotspots.json      # Demo thermal anomaly records (Gujarat)
-│   ├── lib/
-│   │   └── queryClient.ts          # TanStack Query client configuration
-│   ├── pages/
-│   │   ├── AnalyticsPage.tsx       # Placeholder page: Analytics (COMING IN NEXT PHASE)
-│   │   ├── FacilitiesPage.tsx      # Placeholder page: Facilities (COMING IN NEXT PHASE)
-│   │   ├── IncidentsPage.tsx       # Incidents log page with search, filters, CSV export
-│   │   ├── MapPage.tsx             # Main Live Map layout view
-│   │   └── ReportsPage.tsx         # Placeholder page: Reports (COMING IN NEXT PHASE)
-│   ├── services/
-│   │   ├── alertService.ts         # Async alert data service
-│   │   ├── facilityService.ts      # Async facility data service
-│   │   ├── hotspotService.ts       # Async hotspot data service
-│   │   └── queries/
-│   │       ├── useAlertsQuery.ts     # TanStack Query hook for alerts
-│   │       ├── useFacilitiesQuery.ts # TanStack Query hook for facilities
-│   │       └── useHotspotsQuery.ts   # TanStack Query hook for hotspots
-│   ├── store/
-│   │   └── mapStore.ts             # Global Zustand client UI state
-│   ├── styles/
-│   │   └── globals.css             # Tailwind base & dark scrollbar styling
-│   ├── types/
-│   │   ├── alert.ts                # Alert interfaces & severity types
-│   │   ├── facility.ts             # Facility interfaces & labels
-│   │   ├── hotspot.ts              # Hotspot interfaces, labels, color mappings
-│   │   ├── incident.ts             # Derived Incident interface
-│   │   └── map.ts                  # Map viewport constants & specs
-│   └── utils/
-│       ├── exportCsv.ts            # CSV export utility for incidents
-│       ├── geo.ts                  # Haversine distance formula calculation
-│       ├── geojson.ts              # GeoJSON conversion & client-side filtering
-│       └── incidents.ts            # Conversion from hotspots to derived incidents
-│   ├── App.tsx                     # Main App component with React Router routes
-│   └── main.tsx                    # Application entry point
-├── index.html
-├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── vite.config.ts
-```
-
----
-
-## 8. Routing
-Client-side routing is handled by `react-router-dom`:
-
-- `/` → `MapPage` (Main Live Map view with floating overlays).
-- `/incidents` → `IncidentsPage` (Detailed incident table with filtering, search, sorting, and CSV export).
-- `/facilities` → `FacilitiesPage` (Structured ThermalWatch placeholder page).
-- `/analytics` → `AnalyticsPage` (Structured ThermalWatch placeholder page).
-- `/reports` → `ReportsPage` (Structured ThermalWatch placeholder page).
-
-All 5 routes are active, fully styled, and highlight their respective tab in the `Navbar`.
-
----
-
-## 9. UI Architecture
-The UI follows a strict **Mission Control / Dark Geospatial Intelligence** aesthetic.
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              NAVBAR                                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│ [LEGEND]                                    [ALERT] [BASEMAP SELECTOR]  │
-│                                                                         │
-│                               FULL-BLEED                                │
-│                             GEOGRAPHIC MAP                              │
-│                                                                         │
-│                                                                         │
-│ [MAP CONTROLS]                                           [RIGHT PANEL]  │
-│                                                                         │
-│                      ┌─────── TIMELINE ───────┐                         │
-│                      └────────────────────────┘                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-- **Top Navbar**: Height 56px, background `#0D1117`, border-bottom `#1E293B`.
-- **Background**: Application body background is `#080C14`.
-- **Panels**: Solid `#111827` dark charcoal, border `#1E293B`, border-radius `8px` - `12px`, shadow `0 8px 32px rgba(0,0,0,0.8)`. No backdrop blur or semi-transparent background bleed.
-
----
-
-## 10. Map Architecture
-Rendered using `react-map-gl/maplibre` and `MapLibre GL`.
-
-- **Initial Viewport**: Center `[71.5, 22.5]` (Gujarat, India), Zoom level `7.2`.
-- **Sources & Layers**:
-  - `thunderforest-basemap`: Raster tile source loading map tiles dynamically.
-  - `hotspots-heat`: Heatmap layer rendering density gradients.
-  - `hotspots-points`: Circle point layer rendering individual hotspot dots.
-  - `hotspot-points-glow`: Subtle radial glow behind hotspot dots.
-  - `facilities-points`: Blue circle point layer for industrial facilities.
-  - `selected-hotspot`: Highlight glow & ring layer for active selected hotspot.
-  - `selected-facility`: Highlight glow & ring layer for active selected facility.
-
----
-
-## 11. Thunderforest Usage
-- **Role**: Geographic basemap provider (raster tiles).
-- **Environment Variable**: `VITE_THUNDERFOREST_API_KEY`.
-- **Tile Pattern**: `https://api.thunderforest.com/{styleId}/{z}/{x}/{y}.png?apikey={API_KEY}`
-- **Configured Styles** (`src/config/mapStyles.ts`):
-  1. `cycle`: "Cycle Map" (Cycling & detailed geographic context) - **Default**
-  2. `atlas`: "Atlas" (Clean & minimal)
-  3. `transport`: "Transport" (Roads & transportation)
-  4. `transport-dark`: "Transport Dark" (Dark transportation map)
-  5. `landscape`: "Landscape" (Terrain & natural features)
-- **Style Switching**: Changing basemap updates `mapStyle` in Zustand, which updates MapLibre's raster tile source while preserving center, zoom, bearing, pitch, heatmap, hotspots, facilities, selection, and filter states.
-
----
-
-## 12. Thermal Visualization
-Thermal anomalies are visualized via two complementary layers:
-
-1. **Thermal Heatmap Layer** (`hotspot-heatmap`):
-   - Represents thermal concentration and density.
-   - `heatmap-weight`: Interpolated based on `heatWeight` property (`0.7 * normalizedBrightness + 0.3 * confidence`).
-   - `heatmap-intensity`: Interpolated by zoom (`zoom 4: 0.6` → `zoom 14: 5.5`).
-   - `heatmap-radius`: Interpolated by zoom (`zoom 4: 16px` → `zoom 14: 38px`).
-   - `heatmap-color` spectrum:
-     - `0.04`: `rgba(255,235,59,0.25)` (Transparent yellow fringe)
-     - `0.18`: `#FFC107` (Bright Amber / Yellow)
-     - `0.38`: `#FF9800` (Warm Orange)
-     - `0.58`: `#F4511E` (Red-Orange)
-     - `0.78`: `#E53935` (Vibrant Red)
-     - `1.00`: `#B71C1C` (Deep Dark Red Core)
-2. **Individual Hotspot Point Layer** (`hotspot-points`):
-   - Represents distinct satellite detection locations.
-   - Styled by category color with black stroke.
-
----
-
-## 13. Hotspot Architecture
-- **Categories & Colors**:
-  - `industrial_fire`: Red (`#FF4444`)
-  - `gas_flare`: Orange (`#FF8C00`)
-  - `agricultural`: Yellow (`#F5C518`)
-  - `wildfire`: Green (`#3DB86B`)
-  - `unknown`: Muted Gray (`#4A5568`)
-- **TypeScript Interface** (`src/types/hotspot.ts`):
-  ```typescript
-  export type HotspotType = 'industrial_fire' | 'gas_flare' | 'agricultural' | 'wildfire' | 'unknown';
-  export type Severity = 'critical' | 'high' | 'medium' | 'low';
-
-  export interface Hotspot {
-    id: string;
-    latitude: number;
-    longitude: number;
-    type: HotspotType;
-    brightness: number; // Kelvin (e.g. 240 - 360)
-    confidence: number; // 0 - 100%
-    severity: Severity;
-    timestamp: string;  // ISO string
-    facilityId: string | null;
-    status: 'active' | 'monitoring' | 'resolved';
-  }
-  ```
-
----
-
-## 14. Facility Architecture
-- **Facility Categories**: `refinery`, `power_plant`, `steel_plant`, `cement_plant`, `lng_terminal`.
-- **TypeScript Interface** (`src/types/facility.ts`):
-  ```typescript
-  export type FacilityType = 'refinery' | 'power_plant' | 'steel_plant' | 'cement_plant' | 'lng_terminal';
-
-  export interface Facility {
-    id: string;
-    name: string;
-    type: FacilityType;
-    latitude: number;
-    longitude: number;
-    city: string;
-    state: string;
-    country: string;
-  }
-  ```
-- Facilities are rendered on the map as blue point markers (`#2D7DD2`). Selecting a facility displays its metadata and nearby associated detections in `RightPanel`.
-
----
-
-## 15. Alert Architecture
-- **TypeScript Interface** (`src/types/alert.ts`):
-  ```typescript
-  export type AlertSeverity = 'critical' | 'warning' | 'info';
-
-  export interface Alert {
-    id: string;
-    title: string;
-    message: string;
-    severity: AlertSeverity;
-    timestamp: string;
-    hotspotId?: string;
-    facilityId?: string;
-    acknowledged: boolean;
-  }
-  ```
-- **Alert Interaction**: Selecting an alert item in the top-right `AlertFeed` popover opens `RightPanel` for the target hotspot/facility and triggers map `flyTo`.
-- **Status**: Currently populated with mock alert records (`mock_alerts.json`). Phase 7+ will connect this service to a real-time backend alert pipeline.
-
----
-
-## 16. Incident Architecture
-- **Overview**: Incidents are derived objects constructed from thermal hotspots and correlated facility data (`src/utils/incidents.ts`).
-- **TypeScript Interface** (`src/types/incident.ts`):
-  ```typescript
-  export interface Incident {
-    id: string;
-    hotspotId: string;
-    facilityId: string | null;
-    facilityName: string | null;
-    type: HotspotType;
-    severity: Severity;
-    brightness: number;
-    confidence: number;
-    latitude: number;
-    longitude: number;
-    timestamp: string;
-    status: 'active' | 'monitoring' | 'resolved';
-  }
-  ```
-- Rendered in the `/incidents` page inside `IncidentTable`. Features live text search, category filtering, severity filtering, column sorting, CSV export, and map navigation.
-
----
-
-## 17. TanStack Query Architecture
-TanStack Query manages all server-like data fetching and caching.
-
-- **Query Keys**:
-  - `['hotspots']` → `useHotspotsQuery()` → `fetchHotspots()`
-  - `['facilities']` → `useFacilitiesQuery()` → `fetchFacilities()`
-  - `['alerts']` → `useAlertsQuery()` → `fetchAlerts()`
-- **Query Client Defaults** (`src/lib/queryClient.ts`):
-  - `staleTime`: 5 minutes (`5 * 60 * 1000`)
-  - `gcTime`: 10 minutes (`10 * 60 * 1000`)
-  - `refetchOnWindowFocus`: `false`
-  - `refetchOnMount`: `false`
-
-When replacing mock data with FastAPI endpoints in Phase 4+, **only the service functions (`fetchHotspots`, etc.) need to be updated to call `axios`**. All components and query hooks remain unchanged.
-
----
-
-## 18. Zustand Architecture
-Zustand manages client-side UI and interaction state (`src/store/mapStore.ts`).
-
-- **State Schema**:
-  ```typescript
-  interface MapStoreState {
-    selectedHotspotId: string | null;
-    selectedFacilityId: string | null;
-    activeHotspotTypes: HotspotType[];
-    minimumConfidence: number;
-    selectedDate: string; // ISO YYYY-MM-DD
-    showHeatmap: boolean;
-    showFacilities: boolean;
-    rightPanelOpen: boolean; // default: false
-    mapStyle: MapStyleId;    // default: 'cycle'
-    // Actions
-    selectHotspot: (id: string | null) => void;
-    selectFacility: (id: string | null) => void;
-    setSelectedDate: (date: string) => void;
-    setHotspotTypes: (types: HotspotType[]) => void;
-    toggleHotspotType: (type: HotspotType) => void;
-    setMinimumConfidence: (confidence: number) => void;
-    setShowHeatmap: (show: boolean) => void;
-    setShowFacilities: (show: boolean) => void;
-    setRightPanelOpen: (open: boolean) => void;
-    setMapStyle: (style: MapStyleId) => void;
-  }
-  ```
-
-**Strict Rule**: Server datasets (`hotspots`, `facilities`, `alerts`) are **NEVER** stored or duplicated inside Zustand.
-
----
-
-## 19. Data Flow
-
-### Current Architecture (Phase 3D):
-```
-+------------------------+
-|   Mock Data JSONs      |
-+------------------------+
-            |
-            v
-+------------------------+
-|   Service Functions    | (fetchHotspots / fetchFacilities / fetchAlerts)
-+------------------------+
-            |
-            v
-+------------------------+
-|   TanStack Query       | (Server data cache)
-+------------------------+
-            |
-            +---------------------------+
-            |                           |
-            v                           v
-+------------------------+  +------------------------+
-|  Pure Filter Utils     |  |   Zustand UI Store     |
-| (filterHotspots, etc.) |  | (Selection/Date/Style) |
-+------------------------+  +------------------------+
-            |                           |
-            +─────────────┬─────────────+
-                          |
-                          v
-            +------------------------+
-            |  GeoJSON & MapLibre    |
-            |  Interactive Renderer  |
-            +------------------------+
-```
-
----
-
-## 20. Current Mock Data
-- **Location**: `src/data/`
-  - `mock_hotspots.json`: 40 thermal anomaly records located in Gujarat (Jamnagar, Ahmedabad, Vadodara, Surat, Dahej, Kutch, Bhavnagar). Includes brightness (245K–350K), confidence (48%–95%), type, and timestamp.
-  - `mock_facilities.json`: 10 major industrial facility records across Gujarat (Reliance Jamnagar Refinery, Adani Mundra Power Plant, AM/NS Hazira Steel Plant, Gujarat Cement Works, Petronet Dahej LNG Terminal, etc.).
-  - `mock_alerts.json`: 6 alert notification items with critical/warning/info severities linked to specific hotspots or facilities.
-
----
-
-## 21. Type System
-- TypeScript strict mode (`"strict": true`) is enforced across the entire codebase.
-- No `any`, `@ts-ignore`, or `@ts-nocheck` exist.
-- Primary type modules:
-  - `src/types/hotspot.ts`
-  - `src/types/facility.ts`
-  - `src/types/alert.ts`
-  - `src/types/incident.ts`
-  - `src/types/map.ts`
-  - `src/config/mapStyles.ts`
-
----
-
-## 22. State Management Rules
-1. **Server Data** belongs exclusively to **TanStack Query**.
-2. **UI Client State** (selections, toggles, active date, filter parameters, active basemap) belongs exclusively to **Zustand**.
-3. **No Duplication**: Never copy arrays from TanStack Query into Zustand stores.
-4. **Pure Filtering**: Filtering functions (`filterHotspots`) must remain pure and return newly derived arrays without mutating input parameters.
-
----
-
-## 23. Geographic / GeoJSON Rules
-1. **Coordinate Format**: All GeoJSON geometries **MUST** use standard `[longitude, latitude]` array ordering.
-2. **Map Center & Bounding**: Default map center uses `[longitude, latitude]` format: `[71.5, 22.5]`.
-3. **No Heavy DOM Markers**: All map elements (hotspots, heatmap, facilities, selected highlights) must be rendered via MapLibre GL WebGL sources and layers.
-
----
-
-## 24. Environment Variables
-- `VITE_THUNDERFOREST_API_KEY`: Stored in `.env` at project root (`frontend/.env`).
-- Accessed in code via `import.meta.env.VITE_THUNDERFOREST_API_KEY`.
-- Never hardcoded in source code or committed to git.
-
----
-
-## 25. Current User Interactions
-- **Map Selection**: Clicking a hotspot point or facility point opens `RightPanel` with detailed telemetry and highlights the feature on map.
-- **Basemap Selection**: Changing basemap from top-right dropdown instantly switches cartographic tile layer without resetting map position or overlays.
-- **Date Timeline**: Clicking a node on the bottom timeline filters visible map hotspots to detections recorded on or before that date.
-- **Navbar Date Selector**: Clicking the navbar date button opens a popover to select global monitoring dates.
-- **Alert Feed**: Clicking the bell button in the top-right opens alert notifications. Clicking an alert flies the map to the target location and opens `RightPanel`.
-- **Incidents Page**: Full text search, filter by hotspot type, filter by severity, click-to-sort columns, CSV export, and click row to view on map.
-
----
-
-## 26. Current Routes
-- `/` (Live Map)
-- `/incidents` (Incident Management Log)
-- `/facilities` (Facilities Placeholder)
-- `/analytics` (Analytics Placeholder)
-- `/reports` (Reports Placeholder)
-
----
-
-## 27. Current UI Design Rules
-- Dark mission-control aesthetic (`#080C14` background, `#111827` panels, `#1E293B` borders).
-- Blue accent (`#2D7DD2`) for active selections and UI focus.
-- Thermal color coding:
-  - Industrial Fire / Critical / High Heat: Red (`#FF4444` / `#DC2626`)
-  - Gas Flare / High Heat: Orange (`#FF8C00` / `#F97316`)
-  - Agricultural / Medium Heat: Yellow (`#F5C518` / `#FFC107`)
-  - Wildfire: Green (`#3DB86B`)
-  - Unknown: Muted Gray (`#4A5568`)
-- Compact floating overlay design over a dominant full-bleed map surface.
-
----
-
-## 28. Responsive Design
-- Validated across standard viewports: `1366×768`, `1440×900`, `1920×1080`, `1024px`, `768px`.
-- No horizontal scrollbars.
-- Floating overlay panels adjust max-height and internal scrolling to maintain clearance across viewports.
-
----
-
-## 29. Performance Rules
-- **WebGL Rendering**: Hotspots, facilities, and heatmaps render on the GPU via MapLibre GL.
-- **Memoization**: GeoJSON conversions and filtered arrays are wrapped in React `useMemo` hooks.
-- **Query Caching**: TanStack Query prevents unnecessary refetching with a 5-minute stale time.
-- **Zero Overhead**: Backdrop blur effects are omitted in favor of solid dark panel fills for maximum frame rates.
-
----
-
-## 30. Error Handling
-- **Missing API Key**: If `VITE_THUNDERFOREST_API_KEY` is missing, `Map.tsx` displays an inline dark error banner with environment setup instructions.
-- **Empty States**: Both `RightPanel` and `IncidentTable` provide fallback messages when no feature is selected or search query yields zero results.
-
----
-
-## 31. Current Validation Status
-- **TypeScript**: `npx tsc --noEmit` → **PASS** (0 errors)
-- **Production Build**: `npm run build` → **PASS** (✓ 1691 modules transformed)
-- **Runtime**: **PASS** (Zero console errors)
-- **Frontend Freeze**: **APPROVED**
-
----
-
-## 32. What Is NOT Implemented Yet
-- FastAPI backend server
-- PostgreSQL / PostGIS spatial database
-- NASA FIRMS MODIS/VIIRS live satellite ingestion pipeline
-- Real-time satellite observation feeds
-- Machine Learning classification models (XGBoost / SHAP)
-- Celery / Redis background worker tasks
-- Real-time WebSocket or Server-Sent Event alert push mechanisms
-- User authentication and authorization system
-
----
-
-## 33. Planned Backend Architecture (Phase 4+)
 ```
 +-------------------------------------------------------------+
 |                      React Frontend                         |
 |                 (TanStack Query / Axios)                    |
 +-------------------------------------------------------------+
                               ^
-                              | REST API (JSON / GeoJSON)
+                              | REST API / JSON (camelCase serialized)
                               v
 +-------------------------------------------------------------+
 |                       FastAPI Server                        |
-|             (Endpoints / Routers / Pydantic)                |
+|           (/api/v1 - Routers / Services / Repos)            |
 +-------------------------------------------------------------+
                               ^
-                              | SQLAlchemy / GeoAlchemy2
+                              | SQLAlchemy Async Session
                               v
 +-------------------------------------------------------------+
-|               PostgreSQL + PostGIS Database                 |
-|               (Hotspots, Facilities, Alerts)                |
+|               Supabase PostgreSQL + PostGIS                 |
+|            (Hotspots, Facilities, Alerts Tables)            |
 +-------------------------------------------------------------+
 ```
 
----
-
-## 34. Planned Satellite / FIRMS Integration (Phase 5)
-- Automated ingestion pipeline consuming NASA FIRMS thermal anomaly telemetry.
-- Ingestion worker parsing satellite observations (latitude, longitude, brightness, FRP, acquisition date/time, satellite source).
-- Spatial indexing in PostGIS for proximity matching with industrial facilities.
-
----
-
-## 35. Planned ML Pipeline (Phase 6)
-- Machine Learning classifier (XGBoost) trained on historical thermal patterns, brightness profiles, land-use data, and facility proximity.
-- Output: Anomaly classification (`industrial_fire`, `gas_flare`, `agricultural`, `wildfire`, `unknown`), confidence probability, and feature importance explanations (SHAP values).
-
----
-
-## 36. Planned Real-Time Alert Pipeline (Phase 7+)
-- Background evaluator evaluating newly ingested satellite detections.
-- Automated alert generation when high-confidence or critical thermal anomalies are detected within specified threshold distances of high-risk industrial facilities.
+### Clean Control Flow Scoping:
+```
+Route (FastAPI Endpoint)
+ ↓
+Pydantic Schema (Validation & Serialization)
+ ↓
+Service (Business Logic & Derived Incidents Join)
+ ↓
+Repository (Database Queries & PostGIS ST_DWithin)
+ ↓
+Database (Supabase PostgreSQL / PostGIS)
+```
 
 ---
 
-## 37. Future Phase Roadmap
-- **PHASE 4**: Backend Foundation (FastAPI, PostgreSQL/PostGIS, Pydantic schemas, CORS configuration, API routes mirroring frontend types).
-- **PHASE 5**: Real Satellite Data Ingestion (NASA FIRMS integration, PostGIS spatial queries).
-- **PHASE 6**: ML Anomaly Classification (XGBoost classifier, confidence/severity scoring).
-- **PHASE 7**: Frontend ↔ Backend Integration (Connect React service layer to FastAPI endpoints).
-- **PHASE 8**: Automated Processing & Ingestion (Celery / Redis background workers & cron schedules).
-- **PHASE 9**: Testing, Security, and Production Deployment.
+## 7. Database & PostGIS Schema
+
+### Entities:
+1. **`hotspots`**:
+   - `id`: `String` (PK)
+   - `latitude`: `Float`
+   - `longitude`: `Float`
+   - `type`: `String` (`industrial_fire`, `gas_flare`, `agricultural`, `wildfire`, `unknown`)
+   - `brightness`: `Float` (Kelvin)
+   - `confidence`: `Float` (0–100%)
+   - `severity`: `String` (`low`, `medium`, `high`, `critical`)
+   - `timestamp`: `DateTime(tz=True)`
+   - `facility_id`: `String` (FK -> `facilities.id`, nullable)
+   - `status`: `String` (`active`, `resolved`, `monitoring`)
+   - `city`, `district`, `state`, `country` (India-wide structural support)
+   - `geometry`: `Geometry("POINT", srid=4326)` — Spatial order: `POINT(longitude latitude)`
+   - **Indexes**: `type`, `severity`, `state`, `timestamp`, `facility_id`, GIST on `geometry`.
+
+2. **`facilities`**:
+   - `id`: `String` (PK)
+   - `name`: `String`
+   - `type`: `String` (`refinery`, `power_plant`, `steel_plant`, `cement_plant`, `lng_terminal`)
+   - `latitude`: `Float`
+   - `longitude`: `Float`
+   - `city`, `district`, `state`, `country`
+   - `geometry`: `Geometry("POINT", srid=4326)` — Spatial order: `POINT(longitude latitude)`
+   - **Indexes**: `type`, `state`, `city`, GIST on `geometry`.
+
+3. **`alerts`**:
+   - `id`: `String` (PK)
+   - `hotspot_id`: `String` (FK -> `hotspots.id`, nullable)
+   - `facility_id`: `String` (FK -> `facilities.id`, nullable)
+   - `severity`: `String` (`info`, `warning`, `critical`)
+   - `title`: `String`
+   - `message`: `String`
+   - `timestamp`: `DateTime(tz=True)`
+   - `acknowledged`: `Boolean`
+   - **Indexes**: `severity`, `timestamp`, `hotspot_id`, `facility_id`.
+
+4. **`incidents`**:
+   - **Derived server-side** via outer join between `hotspots` and `facilities`. No separate database table needed.
 
 ---
 
-## 38. Rules for Future AI Coding Agents
+## 8. API Contract & Endpoints (`/api/v1`)
+
+| Endpoint | Method | Params | Description |
+|---|---|---|---|
+| `/api/v1/health` | GET | None | System & DB health status |
+| `/api/v1/hotspots` | GET | `page`, `page_size`, `type`, `min_confidence`, `severity`, `state`, `city`, `start_date`, `end_date`, `near_lat`, `near_lng`, `radius_km` | List hotspots with optional PostGIS spatial radius filter |
+| `/api/v1/hotspots/{id}` | GET | `hotspot_id` | Get single hotspot |
+| `/api/v1/facilities` | GET | `page`, `page_size`, `type`, `state`, `city` | List facilities |
+| `/api/v1/facilities/{id}` | GET | `facility_id` | Get single facility |
+| `/api/v1/alerts` | GET | `page`, `page_size`, `severity`, `acknowledged` | List alerts |
+| `/api/v1/alerts/{id}` | GET | `alert_id` | Get single alert |
+| `/api/v1/incidents` | GET | `page`, `page_size`, `type`, `severity`, `min_confidence`, `state`, `start_date`, `end_date` | List derived incidents |
+| `/api/v1/incidents/{id}` | GET | `incident_id` | Get single derived incident |
+
+---
+
+## 9. Current Validation Status
+- **Backend pytest Suite**: `pytest tests/ -v` → **PASS** (15 test cases passing including PostGIS ST_DWithin spatial radius search).
+- **TypeScript**: `npx tsc --noEmit` → **PASS** (0 errors).
+- **Frontend Build**: `npm run build` → **PASS** (✓ 1739 modules transformed).
+- **Runtime Stack**: Both FastAPI (`uvicorn`) and Vite (`npm run dev`) operational and integrated.
+
+---
+
+## 10. Rules for Future AI Coding Agents
 1. **Read `context.md`** thoroughly before making modifications to the codebase.
-2. **Inspect the actual codebase** (`src/`) to understand existing component signatures, state management, and utility functions before proposing changes.
-3. **DO NOT redesign the frozen frontend UI** unless explicitly requested by the user.
-4. **Preserve MapLibre GL + Thunderforest basemap architecture**. Do not replace MapLibre or introduce unauthorized map tile providers.
-5. **Preserve TanStack Query and Zustand boundaries**. Do not store server datasets in Zustand or introduce duplicate state.
-6. **Maintain strict TypeScript discipline**. Never use `any`, `@ts-ignore`, or `@ts-nocheck`.
-7. **Do not hardcode secrets or API keys**. Always use environment variables (`import.meta.env`).
-8. **Keep mock services decoupled**. When implementing Phase 4+, update only `src/services/` to fetch from FastAPI without altering UI components.
-9. **Never state that mock data is live satellite data**.
-10. **Always validate changes** with `npx tsc --noEmit` and `npm run build` before concluding tasks.
+2. **Maintain architectural boundary**: Route -> Schema -> Service -> Repository -> Database.
+3. **DO NOT redesign the frozen frontend UI**.
+4. **Preserve MapLibre GL + Thunderforest basemap architecture**.
+5. **Preserve TanStack Query and Zustand boundaries**.
+6. **Maintain strict TypeScript discipline** (`npx tsc --noEmit`).
+7. **Never expose secrets or DB credentials**. Always use environment variables (`.env`).
+8. **Keep database India-wide capable** (do not hardcode Gujarat-specific constraints into schema).
+9. **FIRMS ingestion is idempotent** — calling `POST /api/v1/ingestion/firms` multiple times with the same data is safe; duplicates are skipped via `ON CONFLICT (id) DO NOTHING`.
+10. **FIRMS_MAP_KEY is backend-only** — never expose it to the frontend or commit it to git.
 
 ---
 
-## 39. How to Continue the Project
-1. Read `context.md`.
-2. Inspect `package.json` and `src/services/` to review existing frontend data contracts.
-3. Begin **Phase 4 — Backend Foundation** by creating the backend directory structure, FastAPI application, and PostgreSQL/PostGIS database schemas.
-4. Ensure FastAPI endpoint schemas strictly match the frontend TypeScript interfaces defined in `src/types/`.
-5. Run validation (`npx tsc --noEmit` and `npm run build`) whenever making frontend service adjustments.
+## 11. Phase 5 — NASA FIRMS Integration
+
+### Architecture
+```
+NASA FIRMS API (VIIRS_SNPP_NRT / MODIS_NRT)
+    ↓
+POST /api/v1/ingestion/firms
+    ↓
+FIRMSIngestionService
+    ├── FIRMSClient.fetch_csv()       → raw CSV text
+    ├── parse_firms_csv()              → List[Dict] (normalized)
+    └── _upsert_batch()               → PostgreSQL ON CONFLICT DO NOTHING
+    ↓
+hotspots table (Supabase PostGIS)
+    ↓
+GET /api/v1/hotspots  (existing endpoint, unchanged)
+    ↓
+TanStack Query → React frontend (unchanged)
+```
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `backend/app/integrations/firms/client.py` | Async HTTP client for NASA FIRMS CSV API |
+| `backend/app/integrations/firms/schemas.py` | Pydantic schemas for VIIRS/MODIS CSV columns |
+| `backend/app/integrations/firms/normalizer.py` | CSV → Hotspot dict normalizer |
+| `backend/app/integrations/firms/service.py` | Ingest orchestrator with batch upsert |
+| `backend/app/api/v1/ingestion.py` | `POST /api/v1/ingestion/firms` endpoint |
+| `backend/tests/test_firms_normalizer.py` | 26 unit tests (pure Python, no DB) |
+
+### ID Strategy
+IDs are stable SHA-256 fingerprints of `(source, lat, lon, acq_date, acq_time)`:
+```python
+f"FIRMS-{sha256(key).hexdigest()[:16]}"
+```
+This makes re-ingestion idempotent — no duplicate rows ever created.
+
+### Confidence Mapping
+- **VIIRS**: `l` → 30%, `n` → 65%, `h` → 90%
+- **MODIS**: Direct integer 0–100 (capped at 100)
+
+### Severity Scoring
+Composite score from brightness (K) and confidence (%):
+```
+score = brightness × 0.7 + confidence × 3.0
+critical: score ≥ 493  |  high: ≥ 434  |  medium: ≥ 356  |  low: below
+```
+
+### Ingestion Endpoints
+```
+POST /api/v1/ingestion/firms
+  Single-source ingestion (Phase 5 baseline)
+  Query params:
+    source    = VIIRS_SNPP_NRT (default) | VIIRS_NOAA20_NRT | VIIRS_NOAA21_NRT | MODIS_NRT
+    bbox      = 68.0,6.0,98.0,38.0  (India default)
+    days      = 1–10 (defaults to FIRMS_INGESTION_DAYS setting)
+  Response:
+    { "source": "...", "fetched": N, "inserted": N, "skipped": N, "errors": 0 }
+
+POST /api/v1/ingestion/firms/all
+  Multi-source ingestion with failure isolation (Phase 5D)
+  Query params:
+    bbox      = 68.0,6.0,98.0,38.0  (India default)
+    days      = 1–10 (defaults to FIRMS_INGESTION_DAYS setting)
+    sources   = comma-separated list (defaults to FIRMS_SOURCES setting)
+  Response:
+    {
+      "sources_attempted": 3,
+      "sources_succeeded": 3,
+      "sources_failed":    0,
+      "total_fetched":     845,
+      "total_inserted":    819,
+      "total_skipped":     26,
+      "bbox":              "68.0,6.0,98.0,38.0",
+      "days":              5,
+      "per_source":        [...],
+      "errors":            []
+    }
+```
 
 ---
 
-## 40. Frontend Freeze Status
+## Phase 5D — Real India-Wide Data Coverage Enhancement
 
+### Objective
+Maximize real satellite coverage by enabling all three operational VIIRS NRT satellites and extending the temporal window to 5 days.
+
+### Configuration
+| Setting              | Default                                    | .env variable        |
+|----------------------|--------------------------------------------|----------------------|
+| Ingestion days       | 5                                          | `FIRMS_INGESTION_DAYS` |
+| FIRMS sources        | VIIRS_SNPP_NRT,VIIRS_NOAA20_NRT,VIIRS_NOAA21_NRT | `FIRMS_SOURCES`  |
+| India bbox           | 68.0,6.0,98.0,38.0                         | (hardcoded constant) |
+
+### Enabled FIRMS Sources
+All three operational VIIRS NRT satellites, verified against the live FIRMS API:
+
+| Source           | Satellite   | Resolution | Status     |
+|------------------|-------------|------------|------------|
+| VIIRS_SNPP_NRT   | Suomi NPP   | ~375 m     | ✅ Enabled  |
+| VIIRS_NOAA20_NRT | NOAA-20     | ~375 m     | ✅ Enabled  |
+| VIIRS_NOAA21_NRT | NOAA-21     | ~375 m     | ✅ Enabled  |
+
+### Multi-Source Architecture
 ```
-============================================================
-CURRENT PROJECT STATUS
-============================================================
-
-FRONTEND:
-FROZEN
-
-PHASE:
-3D / Documentation Checkpoint
-
-MAP RENDERER:
-MapLibre GL + Thunderforest API
-
-THERMAL DATA:
-Mock / Demo Services
-
-BACKEND:
-Not Implemented Yet (Planned Phase 4)
-
-SATELLITE / FIRMS:
-Not Connected Yet (Planned Phase 5)
-
-ML PIPELINE:
-Not Implemented Yet (Planned Phase 6)
-
-DATABASE:
-Not Implemented Yet (Planned Phase 4)
-
-NEXT MAJOR PHASE:
-Phase 4 — Backend Foundation
-
-============================================================
+NASA FIRMS (5-day window)
+        │
+   ┌────┴─────────────┐
+   │         │        │
+ SNPP    NOAA-20  NOAA-21
+   │         │        │
+   └────┬─────────────┘
+        │  (failure isolation: one source failing does not block others)
+        ↓
+   normalizer
+        ↓
+   India boundary filter (is_inside_india)
+        ↓
+   SHA-256 deduplication (source-aware ID)
+        ↓
+   ON CONFLICT (id) DO NOTHING  (idempotent upsert)
+        ↓
+   Supabase / PostGIS
+        ↓
+   FastAPI GET /api/v1/hotspots (page_size up to 2000)
+        ↓
+   TanStack Query → MapLibre
 ```
+
+### Deduplication Behavior
+- **Same source + same observation** → same SHA-256 ID → one DB record (idempotent)
+- **Different source + same location/time** → different SHA-256 ID → separate DB records (correct: two satellites can observe same fire)
+- Fingerprint key: `"{source}|{lat:.4f}|{lon:.4f}|{acq_date}|{acq_time}"`
+
+### Real Ingestion Coverage Metrics (Phase 5D)
+Verified real ingestion run — August 2026, 5-day window, India bbox:
+
+| Metric              | Value                                 |
+|---------------------|---------------------------------------|
+| Total fetched       | 845 (India-filtered from FIRMS API)   |
+| Total inserted      | 819 (new observations)                |
+| Total skipped       | 26 (already existed / deduped)        |
+| VIIRS_SNPP_NRT      | 278 fetched, 252 inserted, 26 skipped |
+| VIIRS_NOAA20_NRT    | 278 fetched, 278 inserted, 0 skipped  |
+| VIIRS_NOAA21_NRT    | 289 fetched, 289 inserted, 0 skipped  |
+| Latitude range      | 8.43°N – 36.83°N                      |
+| Longitude range     | 68.58°E – 97.36°E                     |
+| Total DB hotspots   | 899 (819 FIRMS real + 80 demo/seed)   |
+
+### Geographic Distribution
+Observations confirmed across multiple Indian states including:
+- Gujarat (northwest)
+- Tamil Nadu (south)
+- Andhra Pradesh (east)
+- Assam / Northeast region
+- Ladakh / Himachal (north)
+- Jharkhand / Chhattisgarh (central)
+
+### Known Limitations
+1. **Neighboring-country boundary**: The `is_inside_india()` filter in `normalizer.py` uses polygon approximations (not full GIS shapefiles) to exclude observations from Pakistan, Nepal, Bangladesh, Sri Lanka, and Myanmar. Minor edge cases near borders may be included or excluded incorrectly.
+2. **No systematic state assignment**: The `state` column is NULL for FIRMS records. State-level attribution would require reverse geocoding or PostGIS intersection with India shapefile (Phase 6+ enhancement).
+3. **No type classification**: All FIRMS records are stored with `type = 'unknown'`. Classification belongs to Phase 6 ML pipeline.
+4. **Temporal gaps**: FIRMS may have 0 observations on specific days (bad passes, cloud cover, low detection). The day distribution varies by real satellite coverage.
+5. **Observation coverage ≠ area coverage**: The bbox covers all of India, but observations represent real thermal detections — not a uniform grid. Dense zones (e.g., industrial corridors, current fire seasons) will show higher density naturally.
+
+---
+
+## 12. Problem Statement Alignment (Phase 5E)
+
+### Official Problem Statement
+**Title**: AI-Based Detection and Classification of Industrial Fires and Persistent Thermal Sources Using NASA FIRMS, OSM & Satellite Data
+
+**Core Requirement**: Develop an AI-enabled geospatial system that can automatically identify, classify, and monitor industrial fires and persistent thermal sources by integrating thermal anomaly data, land-cover information, industrial infrastructure databases, and satellite imagery.
+
+### What ThermalWatch Currently Implements
+| Requirement | Status | Details |
+|---|---|---|
+| NASA FIRMS thermal data | ✅ Implemented | 3 VIIRS NRT satellites, India-wide, 7-day ingestion |
+| GIS storage & visualization | ✅ Implemented | PostGIS + MapLibre map overlays |
+| Industrial infrastructure DB | ✅ Partial | Facility schema exists, demo data only (Gujarat) |
+| ML classification | ❌ Not started | Deferred to Phase 6 |
+| Persistence detection | ❌ Not started | Architecture supports it (coordinates + timestamps) |
+| OSM land-use features | ❌ Not started | Basemap uses OSM tiles for cartography only |
+| Satellite imagery integration | ❌ Not started | FIRMS ≠ general satellite imagery |
+
+### What is Intentionally Deferred to Phase 6
+1. **ML Classification Pipeline** — XGBoost/Random Forest model training
+2. **SHAP Explainability** — Feature importance visualization per observation
+3. **Industrial vs Non-Industrial Decision** — Primary classification objective
+4. **Persistence Detection** — Multi-pass temporal clustering
+5. **OSM Land-Use Features** — Industrial/forest/urban context as ML features
+6. **Training Data Curation** — Labeled dataset for supervised learning
+
+### Industrial vs Non-Industrial Classification
+The future ML system will produce:
+```
+classification: "Industrial Fire"
+classification_group: "Industrial"
+```
+or:
+```
+classification: "Wildfire"
+classification_group: "Non-Industrial"
+```
+
+The primary decision boundary is **Industrial vs Non-Industrial**, not a generic five-class fire classifier.
+
+### Persistent Thermal Sources
+The project title explicitly includes "Persistent Thermal Sources". The concept:
+```
+multiple observations → spatial clustering → temporal recurrence → persistence score → persistent thermal source
+```
+
+The current 7-day FIRMS dataset contains sufficient information:
+- Coordinates (latitude, longitude)
+- Acquisition timestamps
+- Brightness (Kelvin)
+- Confidence (0-100)
+- Source/Satellite identification
+
+Persistence detection is deferred to Phase 6.
+
+### OSM Alignment
+**Current**: ThermalWatch uses OpenFreeMap/OpenStreetMap-derived basemap tiles for **cartographic visualization** only.
+
+**Future**: The Phase 6/7 pipeline may use OSM-derived features as ML inputs:
+- Industrial land-use polygons
+- Facility boundaries
+- Road/transportation networks
+- Built-up area density
+
+Using an OSM basemap for map rendering is NOT the same as using OSM geospatial data as ML features.
+
+### Satellite Imagery
+NASA FIRMS provides **thermal anomaly detections** (point observations with brightness/FRP/confidence). This is NOT the same as general satellite imagery (multispectral raster data).
+
+Future enrichment may include satellite imagery context where technically feasible, but FIRMS alone does not satisfy the "satellite imagery" integration requirement.
+
+### What NASA FIRMS Provides
+- Latitude/longitude of thermal anomaly
+- Brightness temperature (Kelvin)
+- Confidence level (low/nominal/high or 0-100)
+- Fire Radiative Power (FRP) in megawatts
+- Acquisition date/time
+- Satellite/instrument identification
+- Scan/track geometry
+
+### What NASA FIRMS Does NOT Provide
+- Classification of fire type (industrial vs natural)
+- Ground truth verification
+- Land-use context
+- Facility association
+- Persistence/recurrence analysis
+- Fire boundary polygons
+- Cause determination
+
+### Scientific Limitations
+1. A FIRMS thermal anomaly is NOT automatically a "fire" — it is a thermal detection
+2. Raw FIRMS `type` column (when present) indicates general categories, not industrial classification
+3. Proximity to a facility does NOT prove the facility caused the anomaly
+4. FIRMS confidence measures detection reliability, not fire severity
+5. "Near Real-Time" means hours of latency, not instantaneous ground truth
+
+---
+
+## 13. Geographic Scope
+
+ThermalWatch is **India-wide**.
+
+- Gujarat is NOT the default region
+- No state is selected by default
+- Real FIRMS observations from Gujarat are valid India-wide data
+- All API endpoints default to `state = null` (all India)
+- Map viewport defaults to center of India (78.96°E, 22.5°N)
+- FIRMS ingestion bbox: `68.0,6.0,98.0,38.0` (all India)
+
+---
+
+## 14. Facility Data Status
+
+- **Current Source**: Currently, there are **0 verified operational facilities** in the database.
+- **Removed Data**: The 15 demo/seed facilities (which were exclusively located in Gujarat) have been entirely removed from the operational database to prevent geographical bias.
+- **India-Wide Coverage**: Incomplete. The facility layer waits for a legitimate data integration (e.g. from official industrial databases or OSM).
+- **Supported Types**: Refinery, Power Plant, Steel Plant, Cement Plant, LNG Terminal.
+- **Spatial Relationship**: Proximity to a facility does NOT prove causation. It is merely contextual geographic data.
+- **Provenance**: A `source` field has been added to the Facility schema to track the origin of future industrial records.
+
+---
+
+## 15. Phase 6 ML Input Contract
+
+### Raw FIRMS Features (available now)
+| Feature | Source | Type |
+|---|---|---|
+| latitude | FIRMS CSV | float |
+| longitude | FIRMS CSV | float |
+| brightness | FIRMS CSV (bright_ti4) | float (Kelvin) |
+| FRP | FIRMS CSV (frp) | float (MW) — not yet stored in schema |
+| confidence | FIRMS CSV | float (0-100) |
+| acquisition_time | FIRMS CSV (acq_date + acq_time) | datetime |
+| satellite | FIRMS CSV | string |
+| instrument | FIRMS CSV | string |
+| source | Ingestion parameter | string |
+
+### Spatial Features (to be computed in Phase 6)
+| Feature | Source | Type |
+|---|---|---|
+| distance_to_nearest_facility | PostGIS ST_Distance | float (km) |
+| nearest_facility_type | Facility table | categorical |
+| industrial_facility_density | PostGIS count within radius | integer |
+| land_use_context | OSM data (future) | categorical |
+
+### Temporal Features (to be computed in Phase 6)
+| Feature | Source | Type |
+|---|---|---|
+| repeated_detections | Spatial+temporal clustering | integer |
+| temporal_persistence | Multi-day observation count | float (days) |
+| observation_frequency | Detections per day at location | float |
+
+### Target Classes
+| Classification | Group |
+|---|---|
+| Industrial Fire | Industrial |
+| Gas Flare | Industrial |
+| Mining / Persistent Thermal Source | Industrial |
+| Agricultural Burning | Non-Industrial |
+| Wildfire | Non-Industrial |
+| Unknown | Unclassified |
+
+### Primary Decision
+**Industrial vs Non-Industrial**
+
+> [!IMPORTANT]
+> This is a design contract only. The model is NOT trained in Phase 5E.
+
+---
+
+## 15. Training Data Requirement
+
+NASA FIRMS does NOT provide the required target labels for industrial/non-industrial categories.
+
+Phase 6 must determine legitimate sources of training labels:
+
+- Verified industrial facility databases with known thermal emissions
+- Known gas flare datasets (e.g., VIIRS Nightfire, World Bank Global Gas Flaring)
+- Curated historical fire events with verified classifications
+- Agricultural burning calendars and crop residue burning patterns
+- Expert-labeled thermal anomaly datasets
+
+Raw FIRMS `type` column values (0, 2, 3) provide coarse categorization but are NOT ground truth for the industrial vs non-industrial distinction.
+
+Fabricated/synthetic labels must NOT be used for training.
+

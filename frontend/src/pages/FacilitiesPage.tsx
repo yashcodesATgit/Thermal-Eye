@@ -22,7 +22,7 @@ export default function FacilitiesPage(): React.JSX.Element {
               FACILITIES
             </h1>
             <p className="text-sm text-[#7A8FA8] leading-relaxed">
-              Facility intelligence and monitored industrial assets across Gujarat.
+              Facility intelligence and monitored industrial assets across India.
             </p>
           </div>
 

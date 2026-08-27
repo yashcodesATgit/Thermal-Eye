@@ -3,12 +3,15 @@ import Navbar from '../components/Navbar';
 import { Search, Download, RotateCcw } from 'lucide-react';
 import { useHotspotsQuery } from '../services/queries/useHotspotsQuery';
 import { useFacilitiesQuery } from '../services/queries/useFacilitiesQuery';
+import { useMapStore } from '../store/mapStore';
 import { deriveIncidents } from '../utils/incidents';
 import { downloadIncidentsCsv } from '../utils/exportCsv';
 import IncidentTable from '../components/IncidentTable';
 
 export default function IncidentsPage(): React.JSX.Element {
-  const { data: hotspots, isLoading: hotspotsLoading } = useHotspotsQuery();
+  const selectedDate = useMapStore((s) => s.selectedDate);
+  const minimumConfidence = useMapStore((s) => s.minimumConfidence);
+  const { data: hotspots, isLoading: hotspotsLoading } = useHotspotsQuery(selectedDate, minimumConfidence);
   const { data: facilities, isLoading: facilitiesLoading } = useFacilitiesQuery();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,7 +66,7 @@ export default function IncidentsPage(): React.JSX.Element {
               INCIDENT LOG
             </h1>
             <p className="text-xs text-[#7A8FA8] mt-1">
-              All classified thermal anomalies — Gujarat region
+              All classified thermal anomalies — India region
             </p>
           </div>
 

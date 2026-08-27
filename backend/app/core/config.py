@@ -1,0 +1,69 @@
+"""
+ThermalWatch backend configuration.
+Loads settings from environment variables via pydantic-settings.
+"""
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from .env file."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+    # Database
+    database_url: str
+    database_url_direct: str | None = None
+    testing: bool = False
+
+    @property
+    def get_database_url(self) -> str:
+        """
+        Return the preferred database URL.
+
+        Always prefers database_url_direct (port 5432, direct PostgreSQL) when
+        configured. This bypasses PgBouncer (port 6543, transaction-pool mode)
+        which conflicts with asyncpg's internal prepared statement initialization
+        (DuplicatePreparedStatementError). Falls back to database_url (PgBouncer
+        pooler) when database_url_direct is not set.
+        """
+        if self.database_url_direct:
+            return self.database_url_direct
+        return self.database_url
+
+    # CORS
+    frontend_origin: str = "http://localhost:5173"
+
+    # Environment
+    environment: str = "development"
+
+    # NASA FIRMS API key — keep backend-only, never expose to frontend
+    firms_map_key: str = ""
+
+    # Number of past days to include in each FIRMS ingestion request.
+    # NASA FIRMS Area API supports 1–10 days per request.
+    # Configurable via FIRMS_INGESTION_DAYS in .env.
+    firms_ingestion_days: int = 7
+
+    # Comma-separated list of FIRMS source identifiers to ingest in multi-source mode.
+    # Configurable via FIRMS_SOURCES in .env.
+    # Defaults to all three operational VIIRS NRT satellites:
+    #   VIIRS_SNPP_NRT   (Suomi NPP, ~375 m resolution)
+    #   VIIRS_NOAA20_NRT (NOAA-20, ~375 m resolution)
+    #   VIIRS_NOAA21_NRT (NOAA-21, ~375 m resolution)
+    firms_sources: str = "VIIRS_SNPP_NRT,VIIRS_NOAA20_NRT,VIIRS_NOAA21_NRT"
+
+    @property
+    def firms_source_list(self) -> list[str]:
+        """Return the list of configured FIRMS sources (trimmed, non-empty)."""
+        return [s.strip() for s in self.firms_sources.split(",") if s.strip()]
+
+    @property
+    def is_development(self) -> bool:
+        return self.environment == "development"
+
+
+settings = Settings()  # type: ignore[call-arg]
