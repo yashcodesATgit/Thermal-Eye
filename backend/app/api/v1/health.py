@@ -37,7 +37,7 @@ async def health_check(db: AsyncSession = Depends(get_db)):
 
     return {
         "status": status,
-        "service": "thermaltrace-api",
+        "service": "thermalwatch-api",
         "version": "0.1.0",
         "database": db_status,
         "redis": redis_status,

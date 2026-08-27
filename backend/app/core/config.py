@@ -2,6 +2,7 @@
 ThermalWatch backend configuration.
 Loads settings from environment variables via pydantic-settings.
 """
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,7 +40,15 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        """Return list of allowed CORS origins, supporting comma-separated strings."""
+        """
+        Return list of allowed CORS origins, supporting comma-separated strings.
+        In production, requires FRONTEND_ORIGIN to be set explicitly.
+        """
+        if not self.is_development and self.frontend_origin == "http://localhost:5173":
+            import logging
+            logging.getLogger("uvicorn.error").warning(
+                "FRONTEND_ORIGIN is using localhost fallback in production mode. Set FRONTEND_ORIGIN in environment."
+            )
         origins = [o.strip() for o in self.frontend_origin.split(",") if o.strip()]
         return origins or ["http://localhost:5173"]
 
@@ -85,6 +94,17 @@ class Settings(BaseSettings):
     llm_provider: str = "gemini"
     llm_model: str = "gemini-3.6-flash"
     gemini_api_key: str = ""
+
+    @model_validator(mode="after")
+    def validate_production_environment(self) -> "Settings":
+        """In production mode, require FRONTEND_ORIGIN and REDIS_URL from environment."""
+        if not self.is_development and not self.testing:
+            if self.frontend_origin == "http://localhost:5173":
+                raise ValueError("FRONTEND_ORIGIN environment variable is required in production mode.")
+            if self.redis_url == "redis://localhost:6379/0":
+                raise ValueError("REDIS_URL environment variable is required in production mode.")
+        return self
+
 
 
 settings = Settings()  # type: ignore[call-arg]
