@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import cast, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from geoalchemy2 import Geography
 
 from app.db.models.hotspot import Hotspot

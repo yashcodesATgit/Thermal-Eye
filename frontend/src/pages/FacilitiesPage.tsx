@@ -181,11 +181,11 @@ export default function FacilitiesPage(): React.JSX.Element {
                 className="bg-[#080C14] border border-[#1E2D45] rounded-lg px-3 py-2 text-xs text-[#E8EDF5] focus:outline-none"
               >
                 <option value="all">All Types</option>
-                <option value="Refinery">Refinery</option>
-                <option value="Power Plant">Power Plant</option>
-                <option value="Steel Plant">Steel Plant</option>
-                <option value="Cement Plant">Cement Plant</option>
-                <option value="LNG Terminal">LNG Terminal</option>
+                <option value="refinery">Refinery</option>
+                <option value="power_plant">Power Plant</option>
+                <option value="steel_plant">Steel Plant</option>
+                <option value="cement_plant">Cement Plant</option>
+                <option value="lng_terminal">LNG Terminal</option>
               </select>
             </div>
 

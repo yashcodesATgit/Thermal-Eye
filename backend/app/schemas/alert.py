@@ -8,7 +8,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-AlertSeverity = Literal["info", "warning", "critical"]
+AlertSeverity = Literal["info", "low", "medium", "high", "warning", "critical"]
 
 
 class AlertResponse(BaseModel):

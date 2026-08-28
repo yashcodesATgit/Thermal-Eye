@@ -153,13 +153,13 @@ class FIRMSSyncManager:
 
                 async with async_session_factory() as db:
                     service = FIRMSIngestionService(db=db, map_key=settings.firms_map_key)
-                    res = await service.ingest_all_sources(days=settings.firms_ingestion_days)
+                    res = await service.ingest_all_sources(sources=settings.firms_source_list, days=settings.firms_ingestion_days)
 
                     self.last_sync_completed_at = datetime.now(timezone.utc)
                     self.last_sync_success_at = self.last_sync_completed_at
                     self.last_sync_status = "success"
                     self.last_sync_error = None
-                    self.observations_ingested = res.get("total_records_inserted", 0)
+                    self.observations_ingested = res.get("total_inserted", 0)
 
                     # Update latest observation timestamp
                     stmt = select(func.max(Hotspot.timestamp))

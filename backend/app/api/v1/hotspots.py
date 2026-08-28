@@ -1,7 +1,7 @@
 """
 Hotspot API endpoints.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -65,7 +65,7 @@ async def get_latest_date(db: AsyncSession = Depends(get_db)):
     latest_ts = await service.repo.get_latest_date()
     if latest_ts:
         return {"date": latest_ts.strftime("%Y-%m-%d")}
-    return {"date": datetime.utcnow().strftime("%Y-%m-%d")}
+    return {"date": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
 
 
 @router.get("/hotspots/activity", response_model=ActivityResponse)

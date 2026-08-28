@@ -5,9 +5,12 @@ Provides PBKDF2-HMAC-SHA256 password hashing, token session management, and serv
 import asyncio
 import hashlib
 import hmac
+import logging
 import secrets
 import time
 from typing import Dict, Optional, Tuple, Any
+
+logger = logging.getLogger(__name__)
 
 # In-memory token store: token -> {user_id, email, name, created_at}
 ACTIVE_SESSIONS: Dict[str, Dict[str, Any]] = {}

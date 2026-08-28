@@ -101,7 +101,7 @@ async def get_analytics_summary(
 async def get_temporal_analytics(
     state: Optional[str] = Query(None),
     classification: Optional[str] = Query(None),
-    interval: str = Query("day", regex="^(day|week)$"),
+    interval: str = Query("day", pattern="^(day|week)$"),
     db: AsyncSession = Depends(get_db),
 ):
     """

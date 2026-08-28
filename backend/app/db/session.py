@@ -60,6 +60,6 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def init_db():
     """Ensure database tables exist on startup."""
     from app.db.base import Base
-    from app.db.models import User, Hotspot, Facility  # noqa
+    from app.db.models import User, Hotspot, Facility, Alert  # noqa
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

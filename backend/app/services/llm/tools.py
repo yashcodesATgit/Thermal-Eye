@@ -324,7 +324,6 @@ class ToolExecutor:
                 "id": f.id,
                 "name": f.name,
                 "type": f.type,
-                "category": f.category,
                 "latitude": f.latitude,
                 "longitude": f.longitude,
                 "state": f.state
