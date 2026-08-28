@@ -1,5 +1,5 @@
 """
-Authentication & Rate Limiting Service for ThermalWatch.
+Authentication & Rate Limiting Service for ThermalEye.
 Provides PBKDF2-HMAC-SHA256 password hashing, token session management, and server-side API rate-limiting / quota controls.
 """
 import asyncio
@@ -78,10 +78,20 @@ def get_session(token: str) -> Optional[Dict[str, Any]]:
         return ACTIVE_SESSIONS[clean_token]
 
     # 2. Verify Supabase JWT token signature / claims
+    from app.core.config import settings
     try:
-        decoded = jwt.decode(clean_token, options={"verify_signature": False})
+        if not settings.supabase_jwt_secret:
+            logger.warning("SUPABASE_JWT_SECRET is not configured.")
+            return None
+
+        decoded = jwt.decode(
+            clean_token,
+            settings.supabase_jwt_secret,
+            algorithms=["HS256"],
+            audience="authenticated"
+        )
         user_id = decoded.get("sub") or decoded.get("user_id") or "supa-user"
-        email = decoded.get("email") or "analyst@thermalwatch.org"
+        email = decoded.get("email") or "analyst@thermaleye.org"
         user_metadata = decoded.get("user_metadata", {})
         name = user_metadata.get("name") or email.split("@")[0].capitalize()
         return {

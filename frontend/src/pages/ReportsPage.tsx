@@ -90,7 +90,7 @@ export default function ReportsPage(): React.JSX.Element {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `thermaltrace_report_${selectedState}_${Date.now()}.csv`);
+      link.setAttribute('download', `thermaleye_report_${selectedState}_${Date.now()}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -105,7 +105,7 @@ export default function ReportsPage(): React.JSX.Element {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `thermaltrace_report_${Date.now()}.json`);
+    link.setAttribute('download', `thermaleye_report_${Date.now()}.json`);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -216,7 +216,7 @@ export default function ReportsPage(): React.JSX.Element {
             <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#1E2D45] pb-4 gap-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#2D7DD2]/10 text-[#2D7DD2] border border-[#2D7DD2]/30 text-[10px] font-bold uppercase tracking-wider mb-1">
-                  Official ThermalTrace Incident Report
+                  Official ThermalEye Incident Report
                 </div>
                 <h2 className="text-xl font-bold text-[#E8EDF5]">{report.reportMetadata.title}</h2>
                 <div className="text-xs text-[#7A8FA8] mt-0.5">

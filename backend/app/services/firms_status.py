@@ -1,5 +1,5 @@
 """
-FIRMS Synchronization & Status Manager for ThermalWatch.
+FIRMS Synchronization & Status Manager for ThermalEye.
 Manages backend-owned sync timestamps, single-concurrency lock, scheduled cadence, freshness status evaluation, and health integration.
 """
 import asyncio

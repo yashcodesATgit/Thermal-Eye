@@ -37,7 +37,7 @@ _VIIRS_CONFIDENCE_MAP: Dict[str, float] = {
 }
 
 # -------------------------------------------------------------------
-# FIRMS type integer → ThermalWatch HotspotType string
+# FIRMS type integer → ThermalEye HotspotType string
 # -------------------------------------------------------------------
 _FIRMS_TYPE_MAP: Dict[int, str] = {
     0: "wildfire",         # presumed vegetation fire

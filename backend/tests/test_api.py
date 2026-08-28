@@ -1,5 +1,5 @@
 """
-Backend API tests for ThermalWatch.
+Backend API tests for ThermalEye.
 """
 import pytest
 from httpx import ASGITransport, AsyncClient

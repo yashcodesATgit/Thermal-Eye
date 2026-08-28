@@ -1,5 +1,5 @@
 """
-Pytest configuration for ThermalWatch backend tests.
+Pytest configuration for ThermalEye backend tests.
 """
 import os
 import pytest

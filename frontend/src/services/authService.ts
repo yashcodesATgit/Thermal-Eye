@@ -1,5 +1,5 @@
 /**
- * Authentication Service Client for ThermalWatch using Supabase Auth.
+ * Authentication Service Client for ThermalEye using Supabase Auth.
  * Manages Supabase Auth session, JWT persistence, and Axios Authorization header headers.
  */
 import api from './api';
@@ -16,8 +16,8 @@ export interface AuthResponse {
   user: User;
 }
 
-const TOKEN_KEY = 'thermalwatch_auth_token';
-const USER_KEY = 'thermalwatch_user_data';
+const TOKEN_KEY = 'thermaleye_auth_token';
+const USER_KEY = 'thermaleye_user_data';
 
 export const getStoredToken = (): string | null => {
   return localStorage.getItem(TOKEN_KEY);

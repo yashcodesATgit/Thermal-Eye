@@ -353,7 +353,7 @@ export default function FacilitiesPage(): React.JSX.Element {
                   <span>Scientific Spatial Context Notice</span>
                 </div>
                 <p className="text-[11px] text-amber-200/80 leading-relaxed">
-                  Proximity of thermal observations to this facility represents spatial context for monitoring. ThermalTrace does NOT claim this facility caused any detected thermal anomaly unless verified ground truth is established.
+                  Proximity of thermal observations to this facility represents spatial context for monitoring. ThermalEye does NOT claim this facility caused any detected thermal anomaly unless verified ground truth is established.
                 </p>
               </div>
 

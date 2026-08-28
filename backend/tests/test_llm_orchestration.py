@@ -49,8 +49,8 @@ def test_chat_response_action_payload():
 
 def test_master_security_and_disclosures():
     """Verify system prompt enforces scientific disclosures, non-causation, and refusal gates."""
-    assert "ThermalTrace ML (model version xgboost-v1-1m-v2)" in SYSTEM_PROMPT
+    assert "ThermalEye ML (model version xgboost-v1-1m-v2)" in SYSTEM_PROMPT
     assert "ML predictions are NOT verified ground truth" in SYSTEM_PROMPT
     assert "NOT proof of causation" in SYSTEM_PROMPT
     assert "93.70% benchmark accuracy was achieved on a synthetic engineering benchmark dataset" in SYSTEM_PROMPT
-    assert "ThermalTrace currently does not provide a validated future-fire forecast" in SYSTEM_PROMPT
+    assert "ThermalEye currently does not provide a validated future-fire forecast" in SYSTEM_PROMPT

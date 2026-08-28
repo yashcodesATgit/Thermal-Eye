@@ -1,5 +1,5 @@
 """
-Unit and integration tests for ThermalWatch Phase 6 ML classification pipeline.
+Unit and integration tests for ThermalEye Phase 6 ML classification pipeline.
 """
 import pytest
 from app.ml.features import extract_features, features_to_vector

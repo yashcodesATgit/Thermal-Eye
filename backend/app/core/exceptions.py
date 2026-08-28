@@ -1,5 +1,5 @@
 """
-ThermalWatch custom exceptions and FastAPI exception handlers.
+ThermalEye custom exceptions and FastAPI exception handlers.
 """
 from fastapi import Request
 from fastapi.responses import JSONResponse

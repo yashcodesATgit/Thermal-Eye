@@ -1,5 +1,5 @@
 """
-FIRMS status API endpoints for ThermalWatch.
+FIRMS status API endpoints for ThermalEye.
 Provides lightweight status metadata without triggering external FIRMS requests.
 """
 from fastapi import APIRouter

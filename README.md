@@ -1,6 +1,7 @@
-# ThermalWatch — Industrial Thermal Anomaly Monitoring Platform
+# ThermalEye
+**AI-Powered Geospatial Thermal Intelligence**
 
-ThermalWatch is a full-stack platform for detecting, classifying, analyzing, and monitoring industrial thermal anomalies across India using satellite data, machine learning (XGBoost), and AI intelligence (Google Gemini).
+ThermalEye is a full-stack platform for detecting, classifying, analyzing, and monitoring industrial thermal anomalies across India using satellite data, machine learning (XGBoost), and AI intelligence (Google Gemini).
 
 ---
 
@@ -15,7 +16,7 @@ ThermalWatch is a full-stack platform for detecting, classifying, analyzing, and
 
 ---
 
-## 🚀 Running ThermalWatch Locally (Non-Docker Development)
+## 🚀 Running ThermalEye Locally (Non-Docker Development)
 
 ### 1. Prerequisites
 - Python 3.11+ / 3.14
@@ -42,7 +43,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 🐳 Running ThermalWatch with Docker Compose
+## 🐳 Running ThermalEye with Docker Compose
 
 ### 1. Configure Environment
 Create a root `.env` file from `.env.example`:

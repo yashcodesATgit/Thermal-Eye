@@ -1,5 +1,5 @@
 """
-ThermalWatch FastAPI application entry point.
+ThermalEye FastAPI application entry point.
 """
 import logging
 
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan context manager for startup/shutdown logging, DB init, and FIRMS sync scheduling."""
-    logger.info("ThermalWatch API starting up...")
+    logger.info("ThermalEye API starting up...")
     logger.info("Environment: %s", settings.environment)
     logger.info("Frontend origin: %s", settings.frontend_origin)
     logger.info("API docs available at /docs")
@@ -48,12 +48,12 @@ async def lifespan(app: FastAPI):
         logger.warning("FIRMS Sync Manager initialization notice: %s", e)
 
     yield
-    logger.info("ThermalWatch API shutting down...")
+    logger.info("ThermalEye API shutting down...")
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="ThermalTrace API",
+    title="ThermalEye API",
     description="Geospatial thermal intelligence platform API",
     version="0.1.0",
     docs_url="/docs",

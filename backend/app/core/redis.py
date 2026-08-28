@@ -1,5 +1,5 @@
 """
-Centralized Redis Client Infrastructure for ThermalWatch.
+Centralized Redis Client Infrastructure for ThermalEye.
 Provides connection pooling, rate limiting, atomic AI quotas, analytics caching,
 distributed locking for FIRMS sync, and graceful failure fallbacks.
 """

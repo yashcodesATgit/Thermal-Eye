@@ -1,5 +1,5 @@
 """
-Read-Only Backend Tool Registry & Analytical Computation Layer for ThermalWatch LLM Assistant.
+Read-Only Backend Tool Registry & Analytical Computation Layer for ThermalEye LLM Assistant.
 Defines JSON tool schemas and async tool execution handlers.
 """
 import logging

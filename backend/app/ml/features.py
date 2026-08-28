@@ -1,5 +1,5 @@
 """
-ThermalWatch ML Feature Extraction Engine.
+ThermalEye ML Feature Extraction Engine.
 Converts raw FIRMS satellite observations and spatial/temporal context into feature vectors.
 """
 from datetime import datetime

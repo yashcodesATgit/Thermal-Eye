@@ -501,7 +501,7 @@ export default function RightPanel(): React.JSX.Element | null {
                 {HOTSPOT_LABELS[(activeHotspot.mlType || activeHotspot.type) as HotspotType] || 'Unknown Anomaly'}
               </h4>
               <p className="text-[11px] text-[#9CA3AF] leading-relaxed">
-                Classified by ThermalTrace XGBoost ML model combining satellite thermal radiance (Ti4/Ti5), Fire Radiative Power (FRP), spatial facility distance, and temporal persistence.
+                Classified by ThermalEye XGBoost ML model combining satellite thermal radiance (Ti4/Ti5), Fire Radiative Power (FRP), spatial facility distance, and temporal persistence.
               </p>
             </div>
 

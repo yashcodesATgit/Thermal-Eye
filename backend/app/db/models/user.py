@@ -1,5 +1,5 @@
 """
-User model for ThermalWatch authentication.
+User model for ThermalEye authentication.
 """
 from datetime import datetime, timezone
 import uuid

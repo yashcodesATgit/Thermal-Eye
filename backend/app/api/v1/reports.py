@@ -1,5 +1,5 @@
 """
-Reports API endpoints for ThermalWatch.
+Reports API endpoints for ThermalEye.
 Generates structured incident/intelligence reports in JSON, CSV, or text/PDF formats.
 """
 from typing import Any, Dict, List, Optional
@@ -93,7 +93,7 @@ async def generate_report(
 
     report_payload = {
         "reportMetadata": {
-            "title": "ThermalTrace Operational Intelligence Report",
+            "title": "ThermalEye Operational Intelligence Report",
             "generatedAt": datetime.now(timezone.utc).isoformat(),
             "scope": req.state or "India-Wide",
             "appliedFilters": {
@@ -122,8 +122,8 @@ async def generate_report(
         },
         "scientificDisclosures": {
             "satelliteSource": "NASA FIRMS Satellite Thermal Anomaly Telemetry",
-            "modelInformation": "ThermalTrace ML (model version xgboost-v1-1m-v2)",
-            "benchmarkAccuracy": "93.70% synthetic engineering benchmark performance (thermalwatch-ml-1m-v2). Real-world ground truth not established.",
+            "modelInformation": "ThermalEye ML (model version xgboost-v1-1m-v2)",
+            "benchmarkAccuracy": "93.70% synthetic engineering benchmark performance (thermaleye-ml-1m-v2). Real-world ground truth not established.",
             "nonCausationNotice": "Industrial facility proximity represents contextual spatial evidence, NOT proof of causation."
         },
         "incidentRecords": incidents_list[:50]
@@ -145,6 +145,6 @@ async def generate_report(
                 inc["severity"],
                 inc["facilityDistanceKm"]
             ])
-        return Response(content=output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=thermaltrace_report.csv"})
+        return Response(content=output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=thermaleye_report.csv"})
 
     return report_payload

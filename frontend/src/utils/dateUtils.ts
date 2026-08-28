@@ -1,5 +1,5 @@
 /**
- * India Standard Time (IST — Asia/Kolkata) Date Utilities for ThermalWatch.
+ * India Standard Time (IST — Asia/Kolkata) Date Utilities for ThermalEye.
  * Ensures all timeline calculations, date selection dropdowns, and status displays
  * operate strictly in IST rather than UTC zero-offset.
  */

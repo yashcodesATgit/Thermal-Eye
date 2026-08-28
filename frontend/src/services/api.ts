@@ -1,5 +1,5 @@
 /**
- * Shared axios instance for ThermalTrace API.
+ * Shared axios instance for ThermalEye API.
  * In production builds, VITE_API_URL is strictly required.
  * Localhost fallback (http://localhost:8000) applies exclusively in local development mode.
  */

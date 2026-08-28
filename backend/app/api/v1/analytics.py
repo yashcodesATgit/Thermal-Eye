@@ -90,7 +90,7 @@ async def get_analytics_summary(
         "highFrpEvents": high_frp_count,
         "anomalousEvents": anomalous_count,
         "modelVersion": "xgboost-v1-1m-v2",
-        "benchmarkDisclosure": "93.70% synthetic engineering benchmark accuracy (thermalwatch-ml-1m-v2). Ground truth not established."
+        "benchmarkDisclosure": "93.70% synthetic engineering benchmark accuracy (thermaleye-ml-1m-v2). Ground truth not established."
     }
 
     await redis_manager.set_cache(canonical_key, json.dumps(payload), ttl_seconds=settings.analytics_cache_ttl_seconds)

@@ -1,5 +1,5 @@
 """
-ThermalWatch backend configuration.
+ThermalEye backend configuration.
 Loads settings from environment variables via pydantic-settings.
 """
 from pydantic import model_validator
@@ -54,6 +54,10 @@ class Settings(BaseSettings):
 
     # Environment
     environment: str = "development"
+
+    # Supabase JWT Secret
+    supabase_jwt_secret: str = ""
+
 
     # NASA FIRMS API key — keep backend-only, never expose to frontend
     firms_map_key: str = ""

@@ -46,7 +46,7 @@ export default function IncidentsPage(): React.JSX.Element {
       return true;
     });
 
-    downloadIncidentsCsv(filtered, `thermaltrace-incidents-${now}.csv`);
+    downloadIncidentsCsv(filtered, `thermaleye-incidents-${now}.csv`);
   };
 
   const resetFilters = () => {

@@ -98,7 +98,7 @@ export default function AnalyticsPage(): React.JSX.Element {
   };
 
   const handleAskAI = () => {
-    const promptText = `Analyze ThermalTrace activity: Total ${summary?.totalObservations || 0} observations, ${summary?.industrialFirePercentage || 0}% predicted industrial fires, ${summary?.persistentEvents || 0} persistent events across India. Why is this period significant?`;
+    const promptText = `Analyze ThermalEye activity: Total ${summary?.totalObservations || 0} observations, ${summary?.industrialFirePercentage || 0}% predicted industrial fires, ${summary?.persistentEvents || 0} persistent events across India. Why is this period significant?`;
     window.dispatchEvent(new CustomEvent('ask-ai-hotspot', { detail: { hotspotId: promptText } }));
   };
 
@@ -291,12 +291,12 @@ export default function AnalyticsPage(): React.JSX.Element {
                   <div className="bg-[#080C14] p-3 rounded-lg border border-[#1E2D45]">
                     <span className="text-[10px] uppercase font-bold text-[#7A8FA8] block">Benchmark Metric</span>
                     <span className="text-sm font-bold text-emerald-400 mt-0.5 block">93.70% Accuracy</span>
-                    <span className="text-[11px] text-[#7A8FA8] mt-1 block">Synthetic Engineering Benchmark (`thermalwatch-ml-1m-v2`)</span>
+                    <span className="text-[11px] text-[#7A8FA8] mt-1 block">Synthetic Engineering Benchmark (`thermaleye-ml-1m-v2`)</span>
                   </div>
 
                   <div className="bg-amber-950/20 border border-amber-500/20 p-3 rounded-lg text-amber-200/90 text-[11px] leading-relaxed">
                     <strong className="text-amber-300 block mb-0.5">Important Notice:</strong>
-                    The 93.70% benchmark was evaluated on synthetic rule-generated data. Real-world ground-truth validation is NOT established. ThermalTrace ML provides probabilistic model predictions.
+                    The 93.70% benchmark was evaluated on synthetic rule-generated data. Real-world ground-truth validation is NOT established. ThermalEye ML provides probabilistic model predictions.
                   </div>
                 </div>
               </div>

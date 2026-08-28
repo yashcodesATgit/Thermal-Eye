@@ -1,5 +1,5 @@
 /**
- * Chat Service client for ThermalWatch AI Intelligence Assistant.
+ * Chat Service client for ThermalEye AI Intelligence Assistant.
  */
 import api from './api';
 

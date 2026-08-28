@@ -22,7 +22,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Hello! I am the ThermalTrace AI Intelligence Assistant. Ask me about active thermal anomalies, industrial predictions, facility proximity, or historical trends across India.'
+      content: 'Hello! I am the ThermalEye AI Intelligence Assistant. Ask me about active thermal anomalies, industrial predictions, facility proximity, or historical trends across India.'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -113,7 +113,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
     setMessages([
       {
         role: 'assistant',
-        content: 'Conversation reset. How can I assist you with ThermalTrace telemetry today?'
+        content: 'Conversation reset. How can I assist you with ThermalEye telemetry today?'
       }
     ]);
   };
@@ -125,7 +125,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
         <button
           onClick={handleOpenChat}
           className={`${positionClass} flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-bold text-xs border border-amber-400/30 cursor-pointer select-none`}
-          title="Open ThermalTrace AI Assistant"
+          title="Open ThermalEye AI Assistant"
         >
           <Bot className="w-4 h-4 animate-pulse shrink-0 text-amber-100" />
           <span className="tracking-wide text-xs">AI</span>
@@ -137,7 +137,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
       <AuthModal
         isOpen={isAuthGateOpen}
         initialMode="login"
-        notice="Login or signup to explore more of Thermal Trace."
+        notice="Login or signup to explore more of Thermal Eye."
         onClose={() => setIsAuthGateOpen(false)}
         onSuccess={() => {
           setIsAuthGateOpen(false);
