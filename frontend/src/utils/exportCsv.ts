@@ -35,7 +35,7 @@ export function downloadIncidentsCsv(incidents: Incident[], filename: string) {
       escapeCsv(inc.id),
       escapeCsv(dateStr),
       escapeCsv(timeStr),
-      escapeCsv(inc.type),
+      escapeCsv(inc.mlType || inc.type),
       escapeCsv(inc.latitude),
       escapeCsv(inc.longitude),
       escapeCsv(inc.facilityName),

@@ -6,6 +6,7 @@ export interface Incident {
   facilityId: string | null;
   facilityName: string | null;
   type: HotspotType;
+  mlType?: HotspotType;
   latitude: number;
   longitude: number;
   brightness: number;

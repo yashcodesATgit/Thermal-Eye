@@ -359,7 +359,7 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
               ],
               'circle-color': [
                 'match',
-                ['get', 'type'],
+                ['coalesce', ['get', 'mlType'], ['get', 'type']],
                 'industrial_fire', HOTSPOT_COLORS.industrial_fire,
                 'gas_flare', HOTSPOT_COLORS.gas_flare,
                 'agricultural', HOTSPOT_COLORS.agricultural,
@@ -385,7 +385,7 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
               ],
               'circle-color': [
                 'match',
-                ['get', 'type'],
+                ['coalesce', ['get', 'mlType'], ['get', 'type']],
                 'industrial_fire', HOTSPOT_COLORS.industrial_fire,
                 'gas_flare', HOTSPOT_COLORS.gas_flare,
                 'agricultural', HOTSPOT_COLORS.agricultural,

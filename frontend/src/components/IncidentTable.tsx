@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ArrowUp, ArrowDown, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Incident } from '../types/incident';
-import { HOTSPOT_COLORS, HOTSPOT_LABELS } from '../types/hotspot';
+import { HOTSPOT_COLORS, HOTSPOT_LABELS, type HotspotType } from '../types/hotspot';
 import { useMapStore } from '../store/mapStore';
 
 interface IncidentTableProps {
@@ -44,7 +44,8 @@ export default function IncidentTable({
     // Filter
     let result = incidents.filter((inc) => {
       // Type
-      if (typeFilter !== 'all' && inc.type !== typeFilter) return false;
+      const effectiveType = inc.mlType || inc.type;
+      if (typeFilter !== 'all' && effectiveType !== typeFilter) return false;
       // Severity
       if (severityFilter !== 'all' && inc.severity !== severityFilter) return false;
       // Search
@@ -52,7 +53,7 @@ export default function IncidentTable({
         const q = searchQuery.toLowerCase();
         if (
           !inc.facilityName?.toLowerCase().includes(q) &&
-          !inc.type.toLowerCase().includes(q) &&
+          !effectiveType.toLowerCase().includes(q) &&
           !inc.status.toLowerCase().includes(q) &&
           !inc.id.toLowerCase().includes(q)
         ) {
@@ -175,9 +176,9 @@ export default function IncidentTable({
                     <div className="flex items-center gap-1.5">
                       <span
                         className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: HOTSPOT_COLORS[inc.type] || HOTSPOT_COLORS.unknown }}
+                        style={{ backgroundColor: HOTSPOT_COLORS[inc.mlType || inc.type] || HOTSPOT_COLORS.unknown }}
                       />
-                      {HOTSPOT_LABELS[inc.type] || 'Unknown'}
+                      {HOTSPOT_LABELS[(inc.mlType || inc.type) as HotspotType] || 'Unknown'}
                     </div>
                   </td>
                   <td className="py-3 px-4 truncate max-w-[200px]" title={inc.facilityName || ''}>

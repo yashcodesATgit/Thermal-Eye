@@ -29,13 +29,14 @@ export default function IncidentsPage(): React.JSX.Element {
     
     // Quick filter check to only export what's visible
     const filtered = incidents.filter(inc => {
-      if (typeFilter !== 'all' && inc.type !== typeFilter) return false;
+      const effectiveType = inc.mlType || inc.type;
+      if (typeFilter !== 'all' && effectiveType !== typeFilter) return false;
       if (severityFilter !== 'all' && inc.severity !== severityFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         if (
           !inc.facilityName?.toLowerCase().includes(q) &&
-          !inc.type.toLowerCase().includes(q) &&
+          !effectiveType.toLowerCase().includes(q) &&
           !inc.status.toLowerCase().includes(q) &&
           !inc.id.toLowerCase().includes(q)
         ) {

@@ -12,8 +12,9 @@ import type { Facility } from '../types/facility';
 import { getDistance } from '../utils/geo';
 
 function getDotColor(item: Hotspot): string {
-  if (item.type && item.type !== 'unknown' && HOTSPOT_COLORS[item.type as HotspotType]) {
-    return HOTSPOT_COLORS[item.type as HotspotType];
+  const displayType = item.mlType || item.type;
+  if (displayType && displayType !== 'unknown' && HOTSPOT_COLORS[displayType as HotspotType]) {
+    return HOTSPOT_COLORS[displayType as HotspotType];
   }
   const severityColors: Record<Severity, string> = {
     low: '#10B981',      // Easy / Green
@@ -272,7 +273,7 @@ export default function RightPanel(): React.JSX.Element | null {
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: getDotColor(h) }}
                       />
-                      <span className="text-[11px] text-[#9CA3AF]">{HOTSPOT_LABELS[h.type as HotspotType]}</span>
+                      <span className="text-[11px] text-[#9CA3AF]">{HOTSPOT_LABELS[(h.mlType || h.type) as HotspotType]}</span>
                     </div>
                     <span className="text-[11px] font-mono font-semibold text-[#E8EDF5]">
                       {h.brightness} K
@@ -290,7 +291,7 @@ export default function RightPanel(): React.JSX.Element | null {
   // ─── ACTIVE HOTSPOT STATE (USER SELECTED OR DYNAMIC MOST CRITICAL) ────────
   if (!activeHotspot) return null;
 
-  const hotspotLabel = HOTSPOT_LABELS[activeHotspot.type as HotspotType] || 'Unknown';
+  const hotspotLabel = HOTSPOT_LABELS[(activeHotspot.mlType || activeHotspot.type) as HotspotType] || 'Unknown';
 
   return (
     <aside className="w-full h-full flex flex-col bg-[#0D121F] overflow-hidden select-none border-l border-[#1e293b]">

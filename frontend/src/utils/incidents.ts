@@ -23,6 +23,7 @@ export function deriveIncidents(
       facilityId: h.facilityId,
       facilityName,
       type: h.type,
+      mlType: h.mlType,
       latitude: h.latitude,
       longitude: h.longitude,
       brightness: h.brightness,
