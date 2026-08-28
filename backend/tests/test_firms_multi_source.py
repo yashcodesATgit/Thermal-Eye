@@ -352,7 +352,7 @@ async def test_firms_all_custom_sources_param(client: AsyncClient, monkeypatch):
 
 class TestPhase5DConfig:
     def test_firms_ingestion_days_default(self):
-        assert settings.firms_ingestion_days == 7
+        assert settings.firms_ingestion_days == 5
 
     def test_firms_source_list_default(self):
         src = settings.firms_source_list

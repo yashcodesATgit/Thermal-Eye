@@ -64,7 +64,7 @@ async def ingest_firms(
         le=10,
         description=(
             "Number of past days to fetch (1-10). "
-            "Defaults to FIRMS_INGESTION_DAYS setting (currently configured as 7)."
+            "Defaults to FIRMS_INGESTION_DAYS setting (currently configured as 5)."
         ),
     ),
     db: AsyncSession = Depends(get_db),
@@ -100,7 +100,7 @@ async def ingest_firms(
     description=(
         "Fetches real satellite thermal data from all configured VIIRS NRT sources "
         "(VIIRS_SNPP_NRT, VIIRS_NOAA20_NRT, VIIRS_NOAA21_NRT) for the configured "
-        "ingestion window (FIRMS_INGESTION_DAYS, default 7 days). "
+        "ingestion window (FIRMS_INGESTION_DAYS, default 5 days). "
         "If one satellite source fails, data from the others is still persisted. "
         "All observations are deduplicated by stable SHA-256 fingerprint. "
         "Safe to call repeatedly — duplicates are silently skipped."

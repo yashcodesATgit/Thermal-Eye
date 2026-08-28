@@ -161,10 +161,11 @@ class HotspotRepository:
             query = query.where(Hotspot.city == city)
         if country is not None:
             query = query.where(Hotspot.country == country)
+        ist_timestamp = func.timezone('Asia/Kolkata', Hotspot.timestamp)
         if start_date is not None:
-            query = query.where(Hotspot.timestamp >= start_date)
+            query = query.where(ist_timestamp >= start_date)
         if end_date is not None:
-            query = query.where(Hotspot.timestamp <= end_date)
+            query = query.where(ist_timestamp <= end_date)
 
         query = query.order_by(date_trunc_day.asc())
 

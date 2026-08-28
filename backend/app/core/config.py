@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     # Number of past days to include in each FIRMS ingestion request.
     # NASA FIRMS Area API supports 1–10 days per request.
     # Configurable via FIRMS_INGESTION_DAYS in .env.
-    firms_ingestion_days: int = 7
+    firms_ingestion_days: int = 5
 
     # Comma-separated list of FIRMS source identifiers to ingest in multi-source mode.
     # Configurable via FIRMS_SOURCES in .env.

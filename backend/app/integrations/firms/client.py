@@ -56,7 +56,7 @@ class FIRMSClient:
             httpx.HTTPStatusError: On non-2xx response.
             httpx.RequestError:    On network / timeout errors.
         """
-        days = max(1, min(days, 10))
+        days = max(1, min(days, 5))
         url = f"{FIRMS_BASE_URL}/{self._map_key}/{source}/{bbox}/{days}"
         logger.info("FIRMS fetch: source=%s bbox=%s days=%d", source, bbox, days)
 
