@@ -80,7 +80,7 @@ async def chat_endpoint(
 
     return ChatResponse(
         message=res.get("message", "No response text."),
-        conversation_id=conv_id,
-        tool_calls=res.get("tool_calls", []),
+        conversationId=conv_id,
+        toolCalls=res.get("tool_calls", []),
         metadata=res.get("metadata", {})
     )
