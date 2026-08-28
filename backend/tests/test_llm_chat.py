@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 
 from app.services.llm.prompts import SYSTEM_PROMPT
 from app.services.llm.tools import TOOL_DECLARATIONS, ToolExecutor
-from app.services.llm.provider import GeminiProvider, get_llm_provider
+from app.services.llm.provider import GeminiProvider, OpenRouterProvider, get_llm_provider
 
 
 def test_system_prompt_scientific_disclosures():
@@ -54,7 +54,7 @@ async def test_tool_executor_system_status():
 
 
 def test_provider_factory_and_fallback():
-    """Verify provider factory returns GeminiProvider."""
+    """Verify provider factory returns OpenRouterProvider by default."""
     provider = get_llm_provider()
-    assert isinstance(provider, GeminiProvider)
+    assert isinstance(provider, OpenRouterProvider)
     assert provider.model is not None

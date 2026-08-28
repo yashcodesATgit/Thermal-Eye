@@ -6,7 +6,7 @@ client = TestClient(app)
 
 def test_endpoint():
     response = client.post("/api/v1/chat", json={
-        "message": "Hello, how are you?",
+        "message": "What is the status of the system?",
         "history": []
     })
     print(f"HTTP Status: {response.status_code}")

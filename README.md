@@ -28,7 +28,7 @@ cd backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env # Configure DATABASE_URL, GEMINI_API_KEY, FIRMS_MAP_KEY
+cp .env.example .env # Configure DATABASE_URL, OPENROUTER_API_KEY, FIRMS_MAP_KEY
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -49,7 +49,7 @@ Create a root `.env` file from `.env.example`:
 ```bash
 cp .env.example .env
 ```
-Fill in your `DATABASE_URL`, `GEMINI_API_KEY`, and `FIRMS_MAP_KEY`.
+Fill in your `DATABASE_URL`, `OPENROUTER_API_KEY`, and `FIRMS_MAP_KEY`.
 
 ### 2. Build & Launch Containers
 ```bash

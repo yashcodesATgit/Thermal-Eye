@@ -91,9 +91,10 @@ class Settings(BaseSettings):
         return self.environment == "development"
 
     # LLM Settings (Backend Only)
-    llm_provider: str = "gemini"
-    llm_model: str = "gemini-3.6-flash"
+    llm_provider: str = "openrouter"
+    llm_model: str = "google/gemini-2.5-flash"
     gemini_api_key: str = ""
+    openrouter_api_key: str = ""
 
     @model_validator(mode="after")
     def validate_production_environment(self) -> "Settings":

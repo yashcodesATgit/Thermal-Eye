@@ -2,6 +2,7 @@
 LLM Provider Abstraction & Gemini Provider Implementation.
 Implements multi-turn tool-calling loop using Gemini REST API / httpx.
 """
+import json
 import logging
 import httpx
 from abc import ABC, abstractmethod
@@ -153,11 +154,163 @@ class GeminiProvider(LLMProvider):
         }
 
 
+class OpenRouterProvider(LLMProvider):
+    """OpenRouter LLM Provider implementation using OpenAI-compatible REST API."""
+
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+        self.api_key = api_key or settings.openrouter_api_key
+        self.model = model or settings.llm_model or "google/gemini-2.5-flash"
+        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+
+    async def chat(
+        self,
+        messages: List[Dict[str, str]],
+        executor: ToolExecutor,
+        max_tool_iterations: int = 5
+    ) -> Dict[str, Any]:
+        if not self.api_key:
+            logger.warning("OpenRouter API key not configured. Returning unconfigured fallback response.")
+            return {
+                "message": "OpenRouter API key is not configured in backend environment (.env). Please set OPENROUTER_API_KEY.",
+                "tool_calls": [],
+                "metadata": {"provider": "openrouter", "model": self.model, "status": "unconfigured"}
+            }
+
+        # Transform messages for OpenAI format
+        formatted_messages = []
+        formatted_messages.append({"role": "system", "content": SYSTEM_PROMPT})
+        
+        for msg in messages:
+            role = msg.get("role", "user")
+            # Ensure roles are 'user' or 'assistant'
+            if role == "human": role = "user"
+            elif role == "model": role = "assistant"
+            formatted_messages.append({"role": role, "content": msg.get("content", "")})
+
+        # Transform tools
+        openai_tools = [{"type": "function", "function": tool} for tool in TOOL_DECLARATIONS]
+
+        payload: Dict[str, Any] = {
+            "model": self.model,
+            "messages": formatted_messages,
+            "tools": openai_tools,
+            "tool_choice": "auto",
+            "max_tokens": 8192
+        }
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": settings.frontend_origin,
+            "X-Title": "ThermalWatch AI"
+        }
+
+        executed_tool_calls = []
+        iterations = 0
+
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            while iterations < max_tool_iterations:
+                iterations += 1
+                try:
+                    resp = await client.post(self.base_url, headers=headers, json=payload)
+                    
+                    if resp.status_code != 200:
+                        try:
+                            resp_json = resp.json()
+                            error_msg = resp_json.get('error', {}).get('message', 'API Error')
+                        except Exception:
+                            error_msg = resp.text
+                        logger.error(f"OpenRouter API HTTP Error {resp.status_code}: {error_msg}")
+                        return {
+                            "message": f"OpenRouter API returned error: {error_msg}",
+                            "tool_calls": executed_tool_calls,
+                            "metadata": {"provider": "openrouter", "model": self.model, "status": "error"}
+                        }
+
+                    resp_json = resp.json()
+                    choices = resp_json.get("choices", [])
+                    if not choices:
+                        return {
+                            "message": "No response returned from OpenRouter API.",
+                            "tool_calls": executed_tool_calls,
+                            "metadata": {"provider": "openrouter", "model": self.model, "status": "empty"}
+                        }
+
+                    message_obj = choices[0].get("message", {})
+                    tool_calls = message_obj.get("tool_calls", [])
+                    content = message_obj.get("content", "")
+
+                    if tool_calls:
+                        # We have tool calls
+                        # Append the assistant's message with the tool_calls to the conversation
+                        payload["messages"].append(message_obj)
+                        
+                        for tc in tool_calls:
+                            if tc.get("type") != "function":
+                                continue
+                            
+                            func_obj = tc.get("function", {})
+                            tool_name = func_obj.get("name")
+                            args_str = func_obj.get("arguments", "{}")
+                            try:
+                                tool_args = json.loads(args_str)
+                            except json.JSONDecodeError:
+                                tool_args = {}
+                                
+                            logger.info(f"LLM requested tool call '{tool_name}' with args {tool_args}")
+
+                            # Execute tool
+                            tool_result = await executor.execute_tool(tool_name, tool_args)
+                            executed_tool_calls.append({"name": tool_name, "args": tool_args, "result": tool_result})
+                            
+                            # Append tool response
+                            payload["messages"].append({
+                                "role": "tool",
+                                "tool_call_id": tc.get("id"),
+                                "content": json.dumps(tool_result)
+                            })
+                    else:
+                        # Final text response
+                        return {
+                            "message": content or "No response text generated.",
+                            "tool_calls": executed_tool_calls,
+                            "metadata": {
+                                "provider": "openrouter",
+                                "model": self.model,
+                                "iterations": iterations,
+                                "status": "success"
+                            }
+                        }
+
+                except httpx.TimeoutException as e:
+                    logger.error(f"OpenRouter API Timeout: {e}", exc_info=True)
+                    return {
+                        "message": "The AI provider timed out. Please try again.",
+                        "tool_calls": executed_tool_calls,
+                        "metadata": {"provider": "openrouter", "model": self.model, "status": "timeout"}
+                    }
+                except Exception as e:
+                    logger.error(f"LLM Provider Exception: {e}", exc_info=True)
+                    return {
+                        "message": f"Error communicating with LLM Provider: {str(e)}",
+                        "tool_calls": executed_tool_calls,
+                        "metadata": {"provider": "openrouter", "model": self.model, "status": "exception"}
+                    }
+
+        return {
+            "message": "Maximum tool call iterations reached.",
+            "tool_calls": executed_tool_calls,
+            "metadata": {"provider": "openrouter", "model": self.model, "status": "max_iterations"}
+        }
+
+
 def get_llm_provider() -> LLMProvider:
     """Factory function returning configured LLMProvider instance."""
     provider_type = settings.llm_provider.lower()
-    if provider_type == "gemini":
+    if provider_type == "openrouter":
+        return OpenRouterProvider()
+    elif provider_type == "gemini":
         return GeminiProvider()
     else:
         # Fallback default
-        return GeminiProvider()
+        return OpenRouterProvider()
+
