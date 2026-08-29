@@ -1,7 +1,7 @@
 """
 Hotspot API endpoints.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -35,7 +35,7 @@ async def list_hotspots(
     """List hotspots with optional filters, PostGIS spatial radius search, and pagination."""
     if end_date and end_date.hour == 0 and end_date.minute == 0 and end_date.second == 0:
         end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-        
+
     service = HotspotService(db)
     items, total = await service.list(
         page=page,
@@ -63,9 +63,14 @@ async def get_latest_date(db: AsyncSession = Depends(get_db)):
     """Get the most recent date available in the database."""
     service = HotspotService(db)
     latest_ts = await service.repo.get_latest_date()
+
+    ist_tz = timezone(timedelta(hours=5, minutes=30))
     if latest_ts:
-        return {"date": latest_ts.strftime("%Y-%m-%d")}
-    return {"date": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
+        if latest_ts.tzinfo is None:
+            latest_ts = latest_ts.replace(tzinfo=timezone.utc)
+        ist_date = latest_ts.astimezone(ist_tz)
+        return {"date": ist_date.strftime("%Y-%m-%d")}
+    return {"date": datetime.now(ist_tz).strftime("%Y-%m-%d")}
 
 
 @router.get("/hotspots/activity", response_model=ActivityResponse)
@@ -81,7 +86,7 @@ async def get_hotspot_activity(
     # Ensure end_date covers the entire day if time is midnight
     if end_date.hour == 0 and end_date.minute == 0 and end_date.second == 0:
         end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-        
+
     service = HotspotService(db)
     activity_data = await service.get_activity(
         end_date=end_date,

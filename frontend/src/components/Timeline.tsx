@@ -1,5 +1,6 @@
 import React from 'react';
 import { useMapStore } from '../store/mapStore';
+import { getRollingISTDates } from '../utils/dateUtils';
 
 interface DateItem {
   label: string;
@@ -10,16 +11,9 @@ interface DateItem {
 export default function Timeline(): React.JSX.Element {
   const selectedDate = useMapStore((s) => s.selectedDate);
   const setSelectedDate = useMapStore((s) => s.setSelectedDate);
+  useMapStore((s) => s.todayIST); // Subscribe to midnight rollover events
 
-  const dates: DateItem[] = [
-    { label: '20 Aug', isoDate: '2026-08-20' },
-    { label: '21 Aug', isoDate: '2026-08-21' },
-    { label: '22 Aug', isoDate: '2026-08-22' },
-    { label: '23 Aug', isoDate: '2026-08-23' },
-    { label: '24 Aug', isoDate: '2026-08-24' },
-    { label: '25 Aug', isoDate: '2026-08-25' },
-    { label: '26 Aug', isoDate: '2026-08-26', isToday: true },
-  ];
+  const dates: DateItem[] = getRollingISTDates(7);
 
   const selectedIndex = dates.findIndex((d) => d.isoDate === selectedDate);
   const activeIndex = selectedIndex >= 0 ? selectedIndex : dates.length - 1;

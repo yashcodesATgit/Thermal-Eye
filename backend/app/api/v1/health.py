@@ -3,7 +3,7 @@ Health check endpoint.
 """
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.api_route("/health", methods=["GET", "HEAD"])
-async def health_check(db: AsyncSession = Depends(get_db)):
+async def health_check(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     """
     Application health check.
     Returns app status, database connectivity, Redis ping status, and FIRMS sync status summary.
@@ -33,6 +33,9 @@ async def health_check(db: AsyncSession = Depends(get_db)):
     redis_status = "healthy" if redis_ok else "unhealthy"
 
     status = "healthy" if db_status == "healthy" and redis_status == "healthy" else "degraded"
+
+    background_tasks.add_task(firms_sync_manager.execute_sync_if_needed)
+
     firms_status = firms_sync_manager.get_status_payload()
 
     return {

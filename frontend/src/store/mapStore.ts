@@ -16,6 +16,7 @@ interface MapStoreState {
 
   // Timeline
   selectedDate: string; // ISO date string YYYY-MM-DD
+  todayIST: string; // ISO date string for tracking real-time midnight rollovers
   isDateInitialized: boolean;
 
   // Toggles
@@ -64,6 +65,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   ],
   minimumConfidence: 0,
   selectedDate: getTodayISTString(),
+  todayIST: getTodayISTString(),
   isDateInitialized: false,
   showHeatmap: true,
   showFacilities: true,
@@ -149,3 +151,17 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
       showRiskZones: true,
     }),
 }));
+
+// Setup automatic midnight rollover
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const newToday = getTodayISTString();
+    const state = useMapStore.getState();
+    if (newToday !== state.todayIST) {
+      useMapStore.setState({
+        todayIST: newToday,
+        selectedDate: state.selectedDate === state.todayIST ? newToday : state.selectedDate,
+      });
+    }
+  }, 60000); // Check every minute
+}

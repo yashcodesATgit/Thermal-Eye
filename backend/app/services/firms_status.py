@@ -64,11 +64,11 @@ class FIRMSSyncManager:
                     if max_ts.tzinfo is None:
                         max_ts = max_ts.replace(tzinfo=timezone.utc)
                     self.latest_observation_at = max_ts
-                    self.last_sync_success_at = now - timedelta(minutes=15)
+                    self.last_sync_success_at = max_ts
                     self.last_sync_status = "success"
                 else:
                     self.latest_observation_at = now - timedelta(hours=1)
-                    self.last_sync_success_at = now - timedelta(minutes=15)
+                    self.last_sync_success_at = now - timedelta(hours=2)
                     self.last_sync_status = "success"
         except Exception as e:
             logger.warning("Notice initializing FIRMS status from database: %s", e)
