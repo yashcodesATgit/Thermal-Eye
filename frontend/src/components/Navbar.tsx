@@ -7,7 +7,6 @@ import {
   LayoutGrid,
   BarChart2,
   FileText,
-  Bot,
   ChevronDown,
   CalendarDays,
   Check,
@@ -79,7 +78,6 @@ export default function Navbar(): React.JSX.Element {
     { label: 'Facilities', path: '/facilities', Icon: LayoutGrid },
     { label: 'Analytics', path: '/analytics', Icon: BarChart2 },
     { label: 'Reports', path: '/reports', Icon: FileText },
-    { label: 'AI Assistant', path: '/analytics', Icon: Bot, badge: 'Beta' },
   ];
 
   // Close popovers on click outside
