@@ -136,7 +136,7 @@ export default function Navbar(): React.JSX.Element {
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-xs tracking-wider text-[#E8EDF5] leading-none">
-            THERMAL<span className="text-[#FF4444]">TRACE</span>
+            THERMAL<span className="text-[#FF4444]">EYE</span>
           </span>
           <span className="text-[8px] text-[#6B7280] font-mono tracking-tight">
             AI-POWERED GEOSPATIAL THERMAL INTELLIGENCE
