@@ -12,7 +12,7 @@ from app.services.llm.provider import GeminiProvider, OpenRouterProvider, get_ll
 def test_system_prompt_scientific_disclosures():
     """Verify system prompt contains all mandatory scientific disclosures and tool rules."""
     assert "NASA FIRMS observations are satellite thermal anomaly detections" in SYSTEM_PROMPT
-    assert "xgboost-v1-1m-v2" in SYSTEM_PROMPT
+    assert "thermalwatch-v1" in SYSTEM_PROMPT
     assert "ML predictions are NOT verified ground truth" in SYSTEM_PROMPT
     assert "facility_dist_km" in SYSTEM_PROMPT
     assert "93.70% benchmark accuracy" in SYSTEM_PROMPT
@@ -49,7 +49,7 @@ async def test_tool_executor_system_status():
 
     assert res["status"] == "healthy"
     assert res["firmsIngestionStatus"] == "ACTIVE"
-    assert res["modelVersion"] == "xgboost-v1-1m-v2"
+    assert res["modelVersion"] == "thermalwatch-v1"
     assert res["totalStoredObservations"] == 859
 
 

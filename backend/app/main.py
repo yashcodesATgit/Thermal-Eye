@@ -1,5 +1,5 @@
 """
-ThermalEye FastAPI application entry point.
+ThermalTrace FastAPI application entry point.
 """
 import logging
 
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan context manager for startup/shutdown logging, DB init, and FIRMS sync scheduling."""
-    logger.info("ThermalEye API starting up...")
+    logger.info("ThermalTrace API starting up...")
     logger.info("Environment: %s", settings.environment)
     logger.info("Frontend origin: %s", settings.frontend_origin)
     logger.info("API docs available at /docs")
@@ -39,21 +39,27 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("DB table creation notice: %s", e)
 
-    # Initialize FIRMS sync manager from existing database
+    # Initialize FIRMS sync manager from existing database & start 6-hour background scheduler
     try:
         from app.services.firms_status import firms_sync_manager
         await firms_sync_manager.initialize_from_db()
-        logger.info("FIRMS Sync Manager initialized. Status: %s", firms_sync_manager.get_status_classification())
+        firms_sync_manager.start_scheduler_task()
+        logger.info("FIRMS Sync Manager initialized. Status: %s. 6-hour scheduler active.", firms_sync_manager.get_status_classification())
     except Exception as e:
         logger.warning("FIRMS Sync Manager initialization notice: %s", e)
 
     yield
-    logger.info("ThermalEye API shutting down...")
+    logger.info("ThermalTrace API shutting down...")
+    try:
+        from app.services.firms_status import firms_sync_manager
+        firms_sync_manager.stop_scheduler_task()
+    except Exception:
+        pass
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="ThermalEye API",
+    title="ThermalTrace API",
     description="Geospatial thermal intelligence platform API",
     version="0.1.0",
     docs_url="/docs",

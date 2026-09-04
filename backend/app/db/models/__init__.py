@@ -2,9 +2,10 @@
 Database models package.
 """
 from app.db.base import Base
-from app.db.models.alert import Alert
-from app.db.models.facility import Facility
-from app.db.models.hotspot import Hotspot
-from app.db.models.user import User
+from .alert import Alert
+from .facility import Facility
+from .hotspot import Hotspot
+from .user import User
+from .osm_feature import OSMFeature
 
-__all__ = ["Base", "Alert", "Facility", "Hotspot", "User"]
+__all__ = ["Base", "Alert", "Facility", "Hotspot", "User", "OSMFeature"]

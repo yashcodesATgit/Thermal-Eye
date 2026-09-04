@@ -6,7 +6,7 @@ import ReactMapGL, {
 } from 'react-map-gl/maplibre';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { ChevronDown, Layers, Check } from 'lucide-react';
+import { ChevronDown, Layers, Check, Globe } from 'lucide-react';
 import { useHotspotsQuery } from '../services/queries/useHotspotsQuery';
 import { useFacilitiesQuery } from '../services/queries/useFacilitiesQuery';
 import { useFirmsStatusQuery } from '../services/queries/useFirmsStatusQuery';
@@ -19,7 +19,13 @@ import {
 } from '../utils/geojson';
 import { HOTSPOT_COLORS } from '../types/hotspot';
 import { INDIA_VIEWPORT } from '../types/map';
-import { MAP_STYLES, buildMapStyleSpec } from '../config/mapStyles';
+import {
+  MAP_STYLES,
+  buildMapStyleSpec,
+  fetchSatelliteStyleSpec,
+  getCachedSatelliteStyleSpec,
+} from '../config/mapStyles';
+import type { StyleSpecification } from 'maplibre-gl';
 import type { GeoJSONFeatureCollection } from '../utils/geojson';
 
 // Empty GeoJSON for initial/fallback state
@@ -71,15 +77,29 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
   const { data: hotspots } = useHotspotsQuery(selectedDate, minimumConfidence);
   const { data: facilities } = useFacilitiesQuery();
 
+  // Cached satellite style spec state
+  const [satelliteSpec, setSatelliteSpec] = useState<StyleSpecification | null>(() =>
+    getCachedSatelliteStyleSpec(),
+  );
+
+  useEffect(() => {
+    fetchSatelliteStyleSpec().then((spec) => {
+      setSatelliteSpec(spec);
+    });
+  }, []);
+
   // Active map style configuration object
   const activeStyleOption = useMemo(() => {
     return MAP_STYLES.find((s) => s.id === mapStyleId) || MAP_STYLES[0];
   }, [mapStyleId]);
 
-  // Dynamic MapLibre style spec memoized by activeStyleOption
+  // Dynamic MapLibre style spec memoized by activeStyleOption & satelliteSpec
   const mapStyleSpec = useMemo(() => {
+    if (mapStyleId === 'satellite') {
+      return satelliteSpec || buildMapStyleSpec(activeStyleOption);
+    }
     return buildMapStyleSpec(activeStyleOption);
-  }, [activeStyleOption]);
+  }, [mapStyleId, activeStyleOption, satelliteSpec]);
 
   // Filtered Hotspots (memoized)
   const filteredHotspots = useMemo(() => {
@@ -202,16 +222,16 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
   return (
     <div className="relative w-full h-full">
       {/* ─── COMPACT NASA FIRMS NRT STATUS CARD (Top-Left inside Map) ─── */}
-      <div className="absolute top-3 left-3 z-20 rounded-xl px-3 py-2 flex items-center gap-2.5 select-none border border-[#1e293b] shadow-2xl backdrop-blur-md bg-[#0F1623]/90 text-[#E8EDF5]">
-        <div className="w-7 h-7 rounded-full bg-[#0B3D91] flex items-center justify-center font-black text-[9px] text-white tracking-tighter shrink-0 border border-white/20">
+      <div className="absolute top-3 left-24 md:left-3 z-20 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-2 sm:gap-2.5 select-none border border-[#1e293b] shadow-2xl backdrop-blur-md bg-[#0F1623]/90 text-[#E8EDF5]">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B3D91] flex items-center justify-center font-black text-[8px] sm:text-[9px] text-white tracking-tighter shrink-0 border border-white/20">
           NASA
         </div>
         <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-[#E8EDF5] tracking-wide">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#E8EDF5] tracking-wide">
               NASA FIRMS NRT
             </span>
-            <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-bold uppercase ${
               firmsStatus?.status === 'live'
                 ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30'
                 : firmsStatus?.status === 'delayed'
@@ -226,9 +246,9 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
               {firmsStatus?.status ? firmsStatus.status.toUpperCase() : 'LIVE'}
             </span>
           </div>
-          <div className="text-[9px] font-mono text-[#7A8FA8] flex items-center gap-2">
-            <span>VIIRS SNPP • NOAA-20 • NOAA-21</span>
-            <span>•</span>
+          <div className="text-[8.5px] sm:text-[9px] font-mono text-[#7A8FA8] flex items-center gap-1.5">
+            <span className="hidden sm:inline">VIIRS SNPP • NOAA-20 • NOAA-21</span>
+            <span className="hidden sm:inline">•</span>
             <span className="text-[#E8EDF5]">Synced {syncFreshnessDisplay}</span>
           </div>
         </div>
@@ -246,7 +266,7 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
         interactiveLayerIds={['hotspot-points', 'facility-points']}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        attributionControl={true}
+        attributionControl={false}
         reuseMaps
       >
         {/* ---- RISK ZONES LAYER ---- */}
@@ -360,10 +380,9 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
               'circle-color': [
                 'match',
                 ['coalesce', ['get', 'mlType'], ['get', 'type']],
-                'industrial_fire', HOTSPOT_COLORS.industrial_fire,
-                'gas_flare', HOTSPOT_COLORS.gas_flare,
-                'agricultural', HOTSPOT_COLORS.agricultural,
-                'wildfire', HOTSPOT_COLORS.wildfire,
+                'industrial_thermal_source', HOTSPOT_COLORS.industrial_thermal_source,
+                'mining_thermal_source', HOTSPOT_COLORS.mining_thermal_source,
+                'natural_fire', HOTSPOT_COLORS.natural_fire,
                 'unknown', HOTSPOT_COLORS.unknown,
                 HOTSPOT_COLORS.unknown,
               ],
@@ -386,10 +405,9 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
               'circle-color': [
                 'match',
                 ['coalesce', ['get', 'mlType'], ['get', 'type']],
-                'industrial_fire', HOTSPOT_COLORS.industrial_fire,
-                'gas_flare', HOTSPOT_COLORS.gas_flare,
-                'agricultural', HOTSPOT_COLORS.agricultural,
-                'wildfire', HOTSPOT_COLORS.wildfire,
+                'industrial_thermal_source', HOTSPOT_COLORS.industrial_thermal_source,
+                'mining_thermal_source', HOTSPOT_COLORS.mining_thermal_source,
+                'natural_fire', HOTSPOT_COLORS.natural_fire,
                 'unknown', HOTSPOT_COLORS.unknown,
                 HOTSPOT_COLORS.unknown,
               ],
@@ -493,9 +511,13 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
           <button
             type="button"
             onClick={() => setIsStyleDropdownOpen(!isStyleDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xl transition-all cursor-pointer border border-[#1e293b] bg-[#111827] text-[#E8EDF5]"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xl transition-all cursor-pointer border border-[#1e293b] bg-[#111827] text-[#E8EDF5] hover:bg-[#1E2D45]"
           >
-            <Layers className="w-3.5 h-3.5 text-[#2D7DD2]" />
+            {activeStyleOption.id === 'satellite' ? (
+              <Globe className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <Layers className="w-3.5 h-3.5 text-[#2D7DD2]" />
+            )}
             <span>{activeStyleOption.label}</span>
             <ChevronDown className="w-3 h-3 text-[#6B7280]" />
           </button>
@@ -503,13 +525,14 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
           {/* Dropdown Options List */}
           {isStyleDropdownOpen && (
             <div
-              className="absolute right-0 top-full mt-1.5 z-50 rounded-xl shadow-2xl overflow-hidden py-1 w-60 bg-[#111827] border border-[#1e293b]"
+              className="absolute right-0 top-full mt-1.5 z-50 rounded-xl shadow-2xl overflow-hidden py-1 w-64 bg-[#111827] border border-[#1e293b]"
               style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.9)' }}
             >
               <div className="px-3 py-1.5 border-b border-[#1e293b] text-[10px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center justify-between">
                 <span>BASEMAP THEMES</span>
+                <span className="text-[9px] text-[#475569] font-normal">8 MODES</span>
               </div>
-              <div className="py-1">
+              <div className="py-1 max-h-80 overflow-y-auto custom-scrollbar">
                 {MAP_STYLES.map((style) => {
                   const isSelected = style.id === mapStyleId;
                   return (
@@ -533,12 +556,17 @@ export default function Map({ mapRef }: MapComponentProps): React.JSX.Element {
                             color: isSelected ? '#2D7DD2' : '#E8EDF5',
                           }}
                         >
+                          {style.id === 'satellite' ? (
+                            <Globe className="w-3 h-3 text-emerald-400 shrink-0" />
+                          ) : (
+                            <Layers className="w-3 h-3 text-[#2D7DD2] shrink-0" />
+                          )}
                           <span>{style.label}</span>
                           <span className="text-[9px] px-1 py-0.2 rounded font-normal bg-[rgba(255,255,255,0.06)] text-[#94A3B8]">
                             {style.provider}
                           </span>
                         </div>
-                        <div className="text-[10px] text-[#6B7280] mt-0.5">
+                        <div className="text-[10px] text-[#6B7280] mt-0.5 pl-4">
                           {style.description}
                         </div>
                       </div>

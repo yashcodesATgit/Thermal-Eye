@@ -1,5 +1,5 @@
 """
-SQLAlchemy declarative base for all ThermalEye models.
+SQLAlchemy declarative base for all ThermalTrace models.
 """
 from sqlalchemy.orm import DeclarativeBase
 

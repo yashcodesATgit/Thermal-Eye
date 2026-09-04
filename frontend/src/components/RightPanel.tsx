@@ -201,7 +201,7 @@ export default function RightPanel(): React.JSX.Element | null {
           </div>
           <h3 className="text-xs font-bold text-[#E8EDF5] mb-1">Loading FIRMS Telemetry</h3>
           <p className="text-[11px] text-[#6B7280] leading-relaxed max-w-[220px]">
-            Fetching latest thermal anomalies and satellite telemetry...
+            Fetching latest thermal anomalies and FIRMS telemetry...
           </p>
         </div>
       </aside>
@@ -291,7 +291,7 @@ export default function RightPanel(): React.JSX.Element | null {
   // ─── ACTIVE HOTSPOT STATE (USER SELECTED OR DYNAMIC MOST CRITICAL) ────────
   if (!activeHotspot) return null;
 
-  const hotspotLabel = HOTSPOT_LABELS[(activeHotspot.mlType || activeHotspot.type) as HotspotType] || 'Unknown';
+  const hotspotLabel = HOTSPOT_LABELS[(activeHotspot.mlType || activeHotspot.type) as HotspotType] || 'Unknown / Unclassified';
 
   return (
     <aside className="w-full h-full flex flex-col bg-[#0D121F] overflow-hidden select-none border-l border-[#1e293b]">
@@ -321,7 +321,7 @@ export default function RightPanel(): React.JSX.Element | null {
           </div>
           <div>
             <h2 className="text-[14px] font-bold text-[#E8EDF5] leading-tight">
-              {hotspotLabel} <span className="text-[9px] font-normal text-[#6B7280]">(Satellite Detection)</span>
+              {hotspotLabel} <span className="text-[9px] font-normal text-[#6B7280]">(FIRMS Satellite Observation)</span>
             </h2>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[9px] font-bold text-[#10B981] bg-[rgba(16,185,129,0.12)] px-1.5 py-0.2 rounded">
@@ -408,7 +408,7 @@ export default function RightPanel(): React.JSX.Element | null {
             {/* 2. FRP, Brightness & FIRMS Confidence */}
             <div className="space-y-1.5 pt-3 border-t border-[#1e293b]">
               <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
-                SATELLITE TELEMETRY
+                FIRMS SATELLITE TELEMETRY
               </span>
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-[#162032] p-2.5 rounded-lg border border-[#1e293b]">
@@ -439,7 +439,7 @@ export default function RightPanel(): React.JSX.Element | null {
                   <span className="text-xs font-bold text-[#E8EDF5] block mt-0.5">NASA FIRMS NRT</span>
                 </div>
                 <div className="bg-[#162032] p-2.5 rounded-lg border border-[#1e293b]">
-                  <span className="text-[9px] font-bold text-[#6B7280] uppercase block">SATELLITE</span>
+                  <span className="text-[9px] font-bold text-[#6B7280] uppercase block">FIRMS SATELLITE</span>
                   <span className="text-xs font-bold text-[#E8EDF5] block mt-0.5">VIIRS</span>
                 </div>
                 <div className="bg-[#162032] p-2.5 rounded-lg border border-[#1e293b]">
@@ -448,6 +448,45 @@ export default function RightPanel(): React.JSX.Element | null {
                 </div>
               </div>
             </div>
+
+            {/* 3. Land Cover Context (ESA WorldCover 10m) */}
+            {(activeHotspot as any).landCoverName && (
+              <div className="space-y-1.5 pt-3 border-t border-[#1e293b]">
+                <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
+                  LAND COVER CONTEXT
+                </span>
+                <div className="flex items-center gap-2 bg-[#162032] p-2.5 rounded-lg border border-[#1e293b]">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-white/20"
+                    style={{
+                      backgroundColor:
+                        (activeHotspot as any).landCoverClass === 10 ? '#006400' :
+                        (activeHotspot as any).landCoverClass === 20 ? '#FFBB22' :
+                        (activeHotspot as any).landCoverClass === 30 ? '#FFFF4C' :
+                        (activeHotspot as any).landCoverClass === 40 ? '#F096FF' :
+                        (activeHotspot as any).landCoverClass === 50 ? '#FA0000' :
+                        (activeHotspot as any).landCoverClass === 60 ? '#B4B4B4' :
+                        (activeHotspot as any).landCoverClass === 70 ? '#F0F0F0' :
+                        (activeHotspot as any).landCoverClass === 80 ? '#0064C8' :
+                        (activeHotspot as any).landCoverClass === 90 ? '#0096A0' :
+                        (activeHotspot as any).landCoverClass === 95 ? '#00CF75' :
+                        '#6B7280'
+                    }}
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-[#E8EDF5] block">
+                      {(activeHotspot as any).landCoverName}
+                    </span>
+                    <span className="text-[9px] text-[#6B7280] block mt-0.5">
+                      ESA WorldCover 2021 • 10m Resolution
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[9px] text-[#6B7280] leading-relaxed">
+                  Satellite-derived land-cover classification provides environmental context for thermal source interpretation.
+                </p>
+              </div>
+            )}
 
             {/* 6. Detection History Section */}
             <div className="pt-3 border-t border-[#1e293b] space-y-2">
@@ -498,11 +537,25 @@ export default function RightPanel(): React.JSX.Element | null {
                 </span>
               </div>
               <h4 className="text-xs font-bold text-[#E8EDF5] mb-1">
-                {HOTSPOT_LABELS[(activeHotspot.mlType || activeHotspot.type) as HotspotType] || 'Unknown Anomaly'}
+                {HOTSPOT_LABELS[(activeHotspot.mlType || activeHotspot.type) as HotspotType] || 'Unknown / Unclassified'}
               </h4>
               <p className="text-[11px] text-[#9CA3AF] leading-relaxed">
-                Classified by ThermalEye XGBoost ML model combining satellite thermal radiance (Ti4/Ti5), Fire Radiative Power (FRP), spatial facility distance, and temporal persistence.
+                Classified by ThermalTrace XGBoost ML model (`thermalwatch-v1`) combining FIRMS thermal characteristics (FRP, brightness), temporal persistence, and OpenStreetMap industrial proximity.
               </p>
+              <div className="mt-2 p-2 bg-[#090D16] border border-[#1E293B] rounded-md text-[10.5px]">
+                <span className="text-[#38BDF8] font-bold block text-[9.5px] uppercase tracking-wider mb-0.5">
+                  PS CATEGORY COVERAGE
+                </span>
+                <span className="text-[#D1D5DB]">
+                  {activeHotspot.mlType === 'industrial_thermal_source'
+                    ? 'Includes industrial process heat, refineries, power plants & gas flaring stacks.'
+                    : activeHotspot.mlType === 'mining_thermal_source'
+                    ? 'Includes quarries, mineral processing & overburden thermal emissions.'
+                    : activeHotspot.mlType === 'natural_fire'
+                    ? 'Encompasses seasonal wildfires, forest fires, agricultural stubble burning & natural vegetation fires.'
+                    : 'Persistent heat source > 2km from mapped industrial features awaiting field verification.'}
+                </span>
+              </div>
             </div>
 
             {/* Feature Contribution Breakdown (SHAP / Feature Importance) */}
@@ -533,12 +586,20 @@ export default function RightPanel(): React.JSX.Element | null {
 
                 const featureLabels: Record<string, string> = {
                   bright_ti4: 'VIIRS Kelvin Brightness (Ti4)',
-                  facility_dist_km: 'Distance to Industrial Facility',
+                  facility_dist_km: 'Distance to Nearest OSM Industrial Infrastructure',
                   frp: 'Fire Radiative Power (FRP MW)',
                   temp_diff: 'Multi-Spectral Radiance (Ti4 - Ti5)',
                   frp_density: 'FRP to Brightness Density',
-                  confidence_norm: 'Satellite Detection Confidence',
+                  confidence_norm: 'FIRMS Detection Confidence',
                   persistence_count: 'Temporal Persistence Count',
+                  nearest_osm_distance_km: 'Distance to Nearest OSM Industrial Infrastructure',
+                  obs_count: 'Observation Count (Cluster Persistence)',
+                  log_mean_frp: 'Mean Fire Radiative Power (log MW)',
+                  log_std_frp: 'FRP Standard Deviation (log)',
+                  frp_cv: 'FRP Coefficient of Variation',
+                  months_active: 'Months Active',
+                  active_duration_days: 'Active Duration (Days)',
+                  first_seen_month: 'First Seen Month',
                 };
 
                 return (
@@ -568,7 +629,7 @@ export default function RightPanel(): React.JSX.Element | null {
             </div>
 
             <div className="p-2.5 bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.2)] rounded-lg text-[10px] text-[#F59E0B] leading-snug">
-              <strong>Scientific Notice</strong>: ML predictions are model-inferred probability classifications. Raw satellite data from NASA FIRMS is preserved independently.
+              <strong>Scientific Notice</strong>: ML predictions are model-inferred probability classifications, not confirmed physical events. Raw FIRMS thermal observation data from NASA is preserved independently. Satellite imagery provides visual and geographic context for interpretation.
             </div>
           </div>
         )}

@@ -22,7 +22,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Hello! I am the ThermalEye AI Intelligence Assistant. Ask me about active thermal anomalies, industrial predictions, facility proximity, or historical trends across India.'
+      content: 'Hello! I am the ThermalTrace AI Intelligence Assistant. Ask me about active thermal anomalies, industrial thermal source predictions, facility proximity, or historical trends across India.'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -113,7 +113,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
     setMessages([
       {
         role: 'assistant',
-        content: 'Conversation reset. How can I assist you with ThermalEye telemetry today?'
+        content: 'Conversation reset. How can I assist you with ThermalTrace telemetry today?'
       }
     ]);
   };
@@ -125,7 +125,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
         <button
           onClick={handleOpenChat}
           className={`${positionClass} flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-bold text-xs border border-amber-400/30 cursor-pointer select-none`}
-          title="Open ThermalEye AI Assistant"
+          title="Open ThermalTrace AI Assistant"
         >
           <Bot className="w-4 h-4 animate-pulse shrink-0 text-amber-100" />
           <span className="tracking-wide text-xs">AI</span>
@@ -137,7 +137,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
       <AuthModal
         isOpen={isAuthGateOpen}
         initialMode="login"
-        notice="Login or signup to explore more of Thermal Eye."
+        notice="Login or signup to explore more of ThermalTrace."
         onClose={() => setIsAuthGateOpen(false)}
         onSuccess={() => {
           setIsAuthGateOpen(false);
@@ -147,7 +147,7 @@ export const ChatAssistant: React.FC<ChatAssistantProps> = ({
 
       {/* Floating Chat Drawer */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[420px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-4rem)] bg-slate-950/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
+        <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-1.5rem)] sm:w-[420px] max-w-[420px] h-[calc(100vh-5rem)] sm:h-[560px] max-h-[560px] bg-slate-950/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
           {/* Header */}
           <div className="px-4 py-3.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

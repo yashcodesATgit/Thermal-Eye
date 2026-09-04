@@ -14,7 +14,7 @@ from app.db.models.hotspot import Hotspot
 INDIAN_STATES_COORDS = [
     ("Punjab", 30.7, 75.8, "agricultural"),
     ("Haryana", 29.0, 76.0, "agricultural"),
-    ("Gujarat", 22.3, 70.8, "industrial_fire"),
+    ("Gujarat", 22.3, 70.8, "unknown"),
     ("Maharashtra", 19.7, 75.7, "agricultural"),
     ("Odisha", 20.8, 85.0, "wildfire"),
     ("Madhya Pradesh", 23.2, 77.4, "wildfire"),
@@ -49,7 +49,7 @@ async def seed_21_22_august():
             ts_str = f"{date_str}T{hour:02d}:{minute:02d}:{second:02d}Z"
             
             # Select ML classification type
-            types_pool = [main_type, main_type, "agricultural", "wildfire", "industrial_fire", "gas_flare"]
+            types_pool = [main_type, main_type, "agricultural", "wildfire", "unknown", "gas_flare"]
             ml_type = random.choice(types_pool)
             
             # FRP and brightness

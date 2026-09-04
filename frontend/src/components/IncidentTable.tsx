@@ -116,38 +116,38 @@ export default function IncidentTable({
 
   return (
     <div className="bg-[#0F1623] border border-[#1E2D45] rounded-lg overflow-hidden shadow-xl">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#162033] border-b border-[#1E2D45] text-[#7A8FA8] font-mono uppercase tracking-wider select-none">
+          <thead className="bg-[#162033] border-b border-[#1E2D45] text-[#7A8FA8] font-mono uppercase tracking-wider select-none whitespace-nowrap">
             <tr>
-              <th className="py-3 px-4">INCIDENT ID</th>
-              <th className="py-3 px-4">TYPE</th>
-              <th className="py-3 px-4">FACILITY</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">INCIDENT ID</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">TYPE</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4">FACILITY</th>
               <th 
-                className="py-3 px-4 cursor-pointer hover:text-[#E8EDF5]"
+                className="py-2.5 sm:py-3 px-3 sm:px-4 cursor-pointer hover:text-[#E8EDF5]"
                 onClick={() => toggleSort('brightness')}
               >
                 BRIGHTNESS <SortIcon field="brightness" />
               </th>
               <th 
-                className="py-3 px-4 cursor-pointer hover:text-[#E8EDF5]"
+                className="py-2.5 sm:py-3 px-3 sm:px-4 cursor-pointer hover:text-[#E8EDF5]"
                 onClick={() => toggleSort('confidence')}
               >
                 CONFIDENCE <SortIcon field="confidence" />
               </th>
               <th 
-                className="py-3 px-4 cursor-pointer hover:text-[#E8EDF5]"
+                className="py-2.5 sm:py-3 px-3 sm:px-4 cursor-pointer hover:text-[#E8EDF5]"
                 onClick={() => toggleSort('timestamp')}
               >
                 DETECTED <SortIcon field="timestamp" />
               </th>
               <th 
-                className="py-3 px-4 cursor-pointer hover:text-[#E8EDF5]"
+                className="py-2.5 sm:py-3 px-3 sm:px-4 cursor-pointer hover:text-[#E8EDF5]"
                 onClick={() => toggleSort('severity')}
               >
                 SEVERITY <SortIcon field="severity" />
               </th>
-              <th className="py-3 px-4 text-right">ACTION</th>
+              <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">ACTION</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1E2D45]/60 text-[#E8EDF5]">
@@ -171,31 +171,31 @@ export default function IncidentTable({
                   onClick={() => handleRowClick(inc)}
                   className="hover:bg-[#162033]/60 cursor-pointer transition-colors"
                 >
-                  <td className="py-3 px-4 font-mono text-[#7A8FA8]">{inc.id}</td>
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-[#7A8FA8] whitespace-nowrap">{inc.id}</td>
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="w-2 h-2 rounded-full"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: HOTSPOT_COLORS[inc.mlType || inc.type] || HOTSPOT_COLORS.unknown }}
                       />
-                      {HOTSPOT_LABELS[(inc.mlType || inc.type) as HotspotType] || 'Unknown'}
+                      <span>{HOTSPOT_LABELS[(inc.mlType || inc.type) as HotspotType] || 'Unknown / Unclassified'}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 truncate max-w-[200px]" title={inc.facilityName || ''}>
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 truncate max-w-[130px] sm:max-w-[200px]" title={inc.facilityName || ''}>
                     {inc.facilityName}
                   </td>
-                  <td className="py-3 px-4 font-mono">{inc.brightness} K</td>
-                  <td className="py-3 px-4 font-mono">{inc.confidence}%</td>
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono whitespace-nowrap">{inc.brightness} K</td>
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono whitespace-nowrap">{inc.confidence}%</td>
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
                     <div className="flex flex-col">
                       <span>{dateStr}</span>
                       <span className="text-[10px] text-[#7A8FA8] font-mono">{timeStr}</span>
                     </div>
                   </td>
-                  <td className={`py-3 px-4 uppercase font-semibold text-[10px] tracking-wider ${severityColor}`}>
+                  <td className={`py-2.5 sm:py-3 px-3 sm:px-4 uppercase font-semibold text-[10px] tracking-wider whitespace-nowrap ${severityColor}`}>
                     {inc.severity}
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right whitespace-nowrap">
                     <button
                       type="button"
                       className="text-[#7A8FA8] hover:text-[#2D7DD2] transition-colors p-1"

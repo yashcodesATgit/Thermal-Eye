@@ -17,7 +17,8 @@ import {
   Bell,
   LogIn,
   UserPlus,
-  LogOut
+  LogOut,
+  Menu
 } from 'lucide-react';
 import { useMapStore } from '../store/mapStore';
 import { useAlertsQuery } from '../services/queries/useAlertsQuery';
@@ -49,6 +50,7 @@ export default function Navbar(): React.JSX.Element {
 
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(getStoredUser());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -57,16 +59,19 @@ export default function Navbar(): React.JSX.Element {
   const datePickerRef = useRef<HTMLDivElement>(null);
   const alertsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const handleOpenAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setIsAuthModalOpen(true);
+    setIsMobileMenuOpen(false);
   };
 
   const handleLogout = async () => {
     await apiLogout();
     setCurrentUser(null);
     setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
   const { data: alerts, isLoading: alertsLoading } = useAlertsQuery();
@@ -88,6 +93,9 @@ export default function Navbar(): React.JSX.Element {
       }
       if (alertsRef.current && !alertsRef.current.contains(event.target as Node)) {
         setIsAlertsOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -128,23 +136,23 @@ export default function Navbar(): React.JSX.Element {
   };
 
   return (
-    <header className="relative z-40 w-full flex items-center justify-between select-none shrink-0 bg-[#0A0E17] border-b border-[#1e293b] px-4 h-12">
+    <header className="relative z-40 w-full flex items-center justify-between select-none shrink-0 bg-[#0A0E17] border-b border-[#1e293b] px-3 sm:px-4 h-12">
       {/* Brand Branding */}
-      <div className="flex items-center gap-2.5">
-        <div className="flex items-center justify-center rounded-lg w-7 h-7 bg-[rgba(255,68,68,0.12)] border border-[rgba(255,68,68,0.3)]">
+      <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center rounded-lg w-7 h-7 bg-[rgba(255,68,68,0.12)] border border-[rgba(255,68,68,0.3)] shrink-0">
           <Flame className="w-4 h-4 text-[#FF4444]" />
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-xs tracking-wider text-[#E8EDF5] leading-none">
-            THERMAL<span className="text-[#FF4444]">EYE</span>
+            THERMAL<span className="text-[#FF4444]">TRACE</span>
           </span>
-          <span className="text-[8px] text-[#6B7280] font-mono tracking-tight">
+          <span className="hidden sm:block text-[8px] text-[#6B7280] font-mono tracking-tight">
             AI-POWERED GEOSPATIAL THERMAL INTELLIGENCE
           </span>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs (Desktop >= 1024px) */}
       <nav className="hidden lg:flex items-center gap-1">
         {navItems.map((item) => {
           const ItemIcon = item.Icon;
@@ -174,22 +182,23 @@ export default function Navbar(): React.JSX.Element {
       </nav>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
         {/* Navbar Alert Pill Button & Popover */}
         <div className="relative" ref={alertsRef}>
           <button
             type="button"
             onClick={() => setIsAlertsOpen(!isAlertsOpen)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgba(220,38,38,0.15)] border border-[rgba(220,38,38,0.4)] text-[#FF4444] hover:bg-[rgba(220,38,38,0.25)] transition-all cursor-pointer"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgba(220,38,38,0.15)] border border-[rgba(220,38,38,0.4)] text-[#FF4444] hover:bg-[rgba(220,38,38,0.25)] transition-all cursor-pointer"
           >
-            <Bell className="w-3.5 h-3.5 text-[#FF4444] animate-pulse" />
-            <span>{unackCount} Alerts</span>
+            <Bell className="w-3.5 h-3.5 text-[#FF4444] animate-pulse shrink-0" />
+            <span className="hidden sm:inline">{unackCount} Alerts</span>
+            <span className="sm:hidden font-mono text-[11px]">{unackCount}</span>
           </button>
 
           {/* Alert Dropdown Popover */}
           {isAlertsOpen && (
             <div
-              className="absolute right-0 top-full mt-1.5 z-50 w-80 rounded-xl bg-[#111827] border border-[#1e293b] shadow-2xl overflow-hidden py-1"
+              className="absolute right-0 top-full mt-1.5 z-50 w-72 sm:w-80 rounded-xl bg-[#111827] border border-[#1e293b] shadow-2xl overflow-hidden py-1"
               style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.9)' }}
             >
               <div className="px-3.5 py-2 border-b border-[#1e293b] flex items-center justify-between bg-[#0F1623]">
@@ -254,13 +263,13 @@ export default function Navbar(): React.JSX.Element {
           <button
             type="button"
             onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#111827] border border-[#1e293b] text-[#8B9BB4] hover:text-[#E8EDF5] transition-colors cursor-pointer"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-medium bg-[#111827] border border-[#1e293b] text-[#8B9BB4] hover:text-[#E8EDF5] transition-colors cursor-pointer"
           >
-            <CalendarDays className="w-3.5 h-3.5 text-[#2D7DD2]" />
+            <CalendarDays className="w-3.5 h-3.5 text-[#2D7DD2] shrink-0" />
             <span className="font-mono text-[11px] font-semibold text-[#E8EDF5]">
               {formatDateDisplay(selectedDate)}
             </span>
-            <ChevronDown className="w-3 h-3 text-[#6B7280]" />
+            <ChevronDown className="w-3 h-3 text-[#6B7280] shrink-0" />
           </button>
 
           {/* Date Picker Popover */}
@@ -298,8 +307,8 @@ export default function Navbar(): React.JSX.Element {
           )}
         </div>
 
-        {/* User Identity / Authentication State */}
-        <div className="flex items-center gap-2 pl-2 border-l border-[#1e293b]">
+        {/* User Identity / Authentication State (Desktop) */}
+        <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-[#1e293b]">
           {currentUser ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -342,7 +351,7 @@ export default function Navbar(): React.JSX.Element {
               <button
                 type="button"
                 onClick={() => handleOpenAuth('login')}
-                className="px-3 py-1 bg-[#162033] hover:bg-[#1E2D45] text-[#E8EDF5] border border-[#1E2D45] rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-2.5 py-1 bg-[#162033] hover:bg-[#1E2D45] text-[#E8EDF5] border border-[#1E2D45] rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <LogIn className="w-3.5 h-3.5 text-[#2D7DD2]" />
                 <span>Log In</span>
@@ -350,11 +359,106 @@ export default function Navbar(): React.JSX.Element {
               <button
                 type="button"
                 onClick={() => handleOpenAuth('signup')}
-                className="px-3 py-1 bg-[#2D7DD2] hover:bg-[#2D7DD2]/90 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-md"
+                className="px-2.5 py-1 bg-[#2D7DD2] hover:bg-[#2D7DD2]/90 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-md"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Sign Up</span>
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Hamburger Menu Toggle Button (< 1024px) */}
+        <div className="relative lg:hidden" ref={mobileMenuRef}>
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-1.5 text-[#8B9BB4] hover:text-[#E8EDF5] hover:bg-[#111827] rounded-lg transition-colors border border-[#1e293b]"
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <X className="w-4 h-4 text-[#FF4444]" /> : <Menu className="w-4 h-4 text-[#E8EDF5]" />}
+          </button>
+
+          {/* Mobile Navigation Drawer Dropdown */}
+          {isMobileMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-[#0D121F] border border-[#1e293b] shadow-2xl p-3 z-50 text-xs space-y-2">
+              <div className="px-2 py-1 text-[10px] font-bold text-[#6B7280] uppercase tracking-wider border-b border-[#1e293b]">
+                NAVIGATION PAGES
+              </div>
+              <div className="space-y-1">
+                {navItems.map((item) => {
+                  const ItemIcon = item.Icon;
+                  return (
+                    <NavLink
+                      key={item.label}
+                      to={item.path}
+                      end={item.path === '/'}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          isActive
+                            ? 'text-[#2D7DD2] bg-[#162033] border border-[#2D7DD2]/30'
+                            : 'text-[#8B9BB4] hover:text-[#E8EDF5] hover:bg-[#111827]'
+                        }`
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <ItemIcon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#2D7DD2] text-white font-bold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </div>
+
+              {/* Mobile User Auth Section */}
+              <div className="pt-2 border-t border-[#1e293b]">
+                {currentUser ? (
+                  <div className="p-2 bg-[#111827] rounded-lg border border-[#1e293b] space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center rounded-full w-6 h-6 bg-[#2D7DD2] text-white font-bold text-[11px] uppercase">
+                        {currentUser.name.charAt(0)}
+                      </div>
+                      <div className="truncate">
+                        <p className="font-bold text-[#E8EDF5] truncate">{currentUser.name}</p>
+                        <p className="text-[10px] text-[#7A8FA8] truncate">{currentUser.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-1.5 py-1 bg-red-950/40 border border-red-500/30 text-red-400 rounded-md font-semibold text-[11px]"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAuth('login')}
+                      className="py-1.5 bg-[#162033] hover:bg-[#1E2D45] text-[#E8EDF5] border border-[#1E2D45] rounded-lg font-semibold flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-[#2D7DD2]" />
+                      <span>Log In</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAuth('signup')}
+                      className="py-1.5 bg-[#2D7DD2] hover:bg-[#2D7DD2]/90 text-white rounded-lg font-semibold flex items-center justify-center gap-1 transition-colors shadow-md"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Sign Up</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

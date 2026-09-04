@@ -201,7 +201,7 @@ class OpenRouterProvider(LLMProvider):
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "HTTP-Referer": settings.frontend_origin,
-            "X-Title": "ThermalEye AI"
+            "X-Title": "ThermalTrace AI"
         }
 
         executed_tool_calls = []

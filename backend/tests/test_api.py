@@ -1,5 +1,5 @@
 """
-Backend API tests for ThermalEye.
+Backend API tests for ThermalTrace.
 """
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -48,11 +48,11 @@ async def test_list_hotspots(client: AsyncClient):
 @pytest.mark.anyio
 async def test_list_hotspots_with_filters(client: AsyncClient):
     """Test hotspot filtering by type."""
-    response = await client.get("/api/v1/hotspots?type=industrial_fire")
+    response = await client.get("/api/v1/hotspots?type=industrial_thermal_source")
     assert response.status_code == 200
     data = response.json()
     for hotspot in data["data"]:
-        assert hotspot["type"] == "industrial_fire"
+        assert hotspot["type"] == "industrial_thermal_source"
 
 
 @pytest.mark.anyio

@@ -1,5 +1,5 @@
 """
-Authentication & Rate Limiting Service for ThermalEye.
+Authentication & Rate Limiting Service for ThermalTrace.
 Provides PBKDF2-HMAC-SHA256 password hashing, token session management, and server-side API rate-limiting / quota controls.
 """
 import asyncio
@@ -91,7 +91,7 @@ def get_session(token: str) -> Optional[Dict[str, Any]]:
             audience="authenticated"
         )
         user_id = decoded.get("sub") or decoded.get("user_id") or "supa-user"
-        email = decoded.get("email") or "analyst@thermaleye.org"
+        email = decoded.get("email") or "analyst@thermaltrace.org"
         user_metadata = decoded.get("user_metadata", {})
         name = user_metadata.get("name") or email.split("@")[0].capitalize()
         return {

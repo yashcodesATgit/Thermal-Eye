@@ -1,5 +1,5 @@
 """
-ThermalEye backend configuration.
+ThermalTrace backend configuration.
 Loads settings from environment variables via pydantic-settings.
 """
 from pydantic import model_validator
@@ -74,8 +74,8 @@ class Settings(BaseSettings):
     #   VIIRS_NOAA20_NRT (NOAA-20, ~375 m resolution)
     #   VIIRS_NOAA21_NRT (NOAA-21, ~375 m resolution)
     firms_sources: str = "VIIRS_SNPP_NRT,VIIRS_NOAA20_NRT,VIIRS_NOAA21_NRT"
-    firms_sync_interval_hours: int = 1
-    firms_stale_threshold_hours: int = 3
+    firms_sync_interval_hours: int = 6
+    firms_stale_threshold_hours: int = 12
 
     # Redis Infrastructure Configuration
     redis_url: str = "redis://localhost:6379/0"

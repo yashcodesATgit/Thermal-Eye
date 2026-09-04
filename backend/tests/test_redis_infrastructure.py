@@ -1,5 +1,5 @@
 """
-Comprehensive Pytest Suite for ThermalEye Redis Infrastructure.
+Comprehensive Pytest Suite for ThermalTrace Redis Infrastructure.
 Tests connection pool, health check, rate limiting, atomic AI quotas, analytics caching,
 FIRMS distributed locking, lock contention, cache invalidation, and failure fallbacks.
 """

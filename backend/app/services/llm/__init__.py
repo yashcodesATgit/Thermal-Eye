@@ -1,3 +1,3 @@
 """
-ThermalEye LLM Intelligence Assistant Service Package.
+ThermalTrace LLM Intelligence Assistant Service Package.
 """

@@ -15,7 +15,7 @@ STRICT_INDIAN_STATES = [
     # State Name, Safe Center Lat, Safe Center Lng, Max Lat Offset, Max Lng Offset, Default Type
     ("Punjab", 30.8, 75.4, 0.4, 0.4, "agricultural"),
     ("Haryana", 29.2, 76.2, 0.4, 0.4, "agricultural"),
-    ("Gujarat", 22.5, 71.5, 0.4, 0.5, "industrial_fire"),
+    ("Gujarat", 22.5, 71.5, 0.4, 0.5, "unknown"),
     ("Maharashtra", 19.5, 75.5, 0.6, 0.8, "agricultural"),
     ("Odisha", 20.5, 84.5, 0.5, 0.6, "wildfire"),
     ("Madhya Pradesh", 23.5, 77.5, 0.8, 1.0, "wildfire"),
@@ -67,7 +67,7 @@ async def clean_and_reseed_india_hotspots():
                 ts_str = f"{date_str}T{hour:02d}:{minute:02d}:{second:02d}+00:00"
                 dt_val = datetime.fromisoformat(ts_str)
 
-                types_pool = [main_type, main_type, "agricultural", "wildfire", "industrial_fire", "gas_flare"]
+                types_pool = [main_type, main_type, "agricultural", "wildfire", "unknown", "gas_flare"]
                 ml_type = random.choice(types_pool)
 
                 frp = round(random.uniform(5.0, 85.0), 2)

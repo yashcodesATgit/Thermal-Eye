@@ -1,5 +1,5 @@
 """
-Authentication API endpoints for ThermalEye.
+Authentication API endpoints for ThermalTrace.
 Provides POST /api/v1/auth/signup, POST /api/v1/auth/login, GET /api/v1/auth/me, and POST /api/v1/auth/logout.
 """
 from typing import Optional

@@ -28,7 +28,9 @@ export async function fetchHotspots(
 export interface ActivityDay {
   date: string;
   total: number;
+  uniqueSources: number;
   byType: Record<string, number>;
+  byTypeUnique: Record<string, number>;
 }
 
 export interface ActivityResponse {

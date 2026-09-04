@@ -1,13 +1,14 @@
 export type HotspotType =
-  | 'industrial_fire'
-  | 'gas_flare'
-  | 'agricultural'
-  | 'wildfire'
+  | 'industrial_thermal_source'
+  | 'mining_thermal_source'
+  | 'natural_fire'
   | 'unknown';
 
 export type Severity = 'low' | 'medium' | 'high' | 'critical';
 
 export type HotspotStatus = 'active' | 'resolved' | 'monitoring';
+
+
 
 export interface Hotspot {
   id: string;
@@ -25,20 +26,21 @@ export interface Hotspot {
   mlConfidence?: number;
   modelVersion?: string;
   mlExplanation?: string | Record<string, number>;
+  // ESA WorldCover 10m land-cover context
+  landCoverClass?: number;
+  landCoverName?: string;
 }
 
 export const HOTSPOT_COLORS: Record<HotspotType, string> = {
-  industrial_fire: '#FF4444',
-  gas_flare: '#FF8C00',
-  agricultural: '#F5C518',
-  wildfire: '#3DB86B',
+  industrial_thermal_source: '#FF4444',
+  mining_thermal_source: '#FF8C00',
+  natural_fire: '#3DB86B',
   unknown: '#4A5568',
 };
 
 export const HOTSPOT_LABELS: Record<HotspotType, string> = {
-  industrial_fire: 'Industrial Fire',
-  gas_flare: 'Gas Flare',
-  agricultural: 'Agricultural',
-  wildfire: 'Wildfire',
-  unknown: 'Unknown',
+  industrial_thermal_source: 'Industrial Thermal Source',
+  mining_thermal_source: 'Mining Thermal Source',
+  natural_fire: 'Natural Fire',
+  unknown: 'Unknown / Unclassified',
 };

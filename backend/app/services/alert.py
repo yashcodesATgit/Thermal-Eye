@@ -58,13 +58,13 @@ class AlertService:
         pers = getattr(hotspot, "persistence_count", 0) or 0
 
         # Multi-factor severity evaluation logic
-        if ml_type in ("industrial_fire", "gas_flare") and ml_conf >= 0.75 and frp >= 20.0 and dist <= 5.0:
+        if ml_type == "industrial_thermal_source" and ml_conf >= 0.75 and frp >= 20.0 and dist <= 5.0:
             severity = "critical"
-            title = f"CRITICAL: High-Confidence {ml_type.replace('_', ' ').title()}"
+            title = "Critical Industrial Thermal Event near Facility"
             msg = f"Predicted {ml_type.replace('_', ' ')} detected with {ml_conf*100:.1f}% model probability, FRP {frp:.1f} MW near facility ({dist:.1f} km)."
-        elif ml_type in ("industrial_fire", "gas_flare") and ml_conf >= 0.60:
+        elif ml_type == "industrial_thermal_source" and ml_conf >= 0.60:
             severity = "high"
-            title = f"HIGH: Likely {ml_type.replace('_', ' ').title()}"
+            title = "High Confidence Industrial Event"
             msg = f"Predicted {ml_type.replace('_', ' ')} detected ({ml_conf*100:.1f}% ML confidence, FRP {frp:.1f} MW)."
         elif ml_conf >= 0.50 or pers >= 3:
             severity = "medium"

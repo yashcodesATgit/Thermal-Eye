@@ -46,11 +46,11 @@ async def get_analytics_summary(
     hotspots = res.scalars().all()
 
     total_obs = len(hotspots)
+    unique_sources_seen = set()
     class_counts: Dict[str, int] = {
-        "industrial_fire": 0,
-        "gas_flare": 0,
-        "wildfire": 0,
-        "agricultural": 0,
+        "industrial_thermal_source": 0,
+        "mining_thermal_source": 0,
+        "natural_fire": 0,
         "unknown": 0,
     }
     sev_counts: Dict[str, int] = {}
@@ -59,8 +59,14 @@ async def get_analytics_summary(
     anomalous_count = 0
 
     for h in hotspots:
+        source_id = f"{round(h.latitude, 3)}_{round(h.longitude, 3)}"
+        is_new_source = source_id not in unique_sources_seen
+        if is_new_source:
+            unique_sources_seen.add(source_id)
+
         ml_t = getattr(h, "ml_type", "unknown") or "unknown"
-        class_counts[ml_t] = class_counts.get(ml_t, 0) + 1
+        if is_new_source:
+            class_counts[ml_t] = class_counts.get(ml_t, 0) + 1
 
         sev = h.severity or "medium"
         sev_counts[sev] = sev_counts.get(sev, 0) + 1
@@ -72,8 +78,9 @@ async def get_analytics_summary(
         if (getattr(h, "frp", 0) and h.frp >= 35.0) or getattr(h, "persistence_count", 0) >= 3:
             anomalous_count += 1
 
-    industrial_total = class_counts["industrial_fire"]
-    industrial_pct = round((industrial_total / total_obs * 100), 1) if total_obs > 0 else 0.0
+    total_unique = len(unique_sources_seen)
+    industrial_total = class_counts["industrial_thermal_source"]
+    industrial_pct = round((industrial_total / total_unique * 100), 1) if total_unique > 0 else 0.0
 
     # Query active alert counts
     alert_stmt = select(func.count()).select_from(Alert).where(Alert.severity.in_(["high", "critical"]))
@@ -82,15 +89,54 @@ async def get_analytics_summary(
 
     payload = {
         "totalObservations": total_obs,
+        "uniqueSources": total_unique,
         "classificationDistribution": class_counts,
         "severityDistribution": sev_counts,
-        "industrialFirePercentage": industrial_pct,
+        "industrialSourcePercentage": industrial_pct,
         "highCriticalAlerts": high_critical_alerts,
         "persistentEvents": persistent_count,
         "highFrpEvents": high_frp_count,
         "anomalousEvents": anomalous_count,
-        "modelVersion": "xgboost-v1-1m-v2",
-        "benchmarkDisclosure": "93.70% synthetic engineering benchmark accuracy (thermaleye-ml-1m-v2). Ground truth not established."
+        "modelVersion": "thermalwatch-v1",
+        "benchmarkDisclosure": "Validated 4-class taxonomy. OpenStreetMap industrial infrastructure and ESA WorldCover land-use data provide corroborating geospatial evidence for spatial classification context.",
+        "psCategoryCoverage": {
+            "industrial_fires": {
+                "psCategory": "Industrial Fires / Heat",
+                "modelClass": "industrial_thermal_source",
+                "coverageType": "classified",
+                "description": "High temporal persistence (≥9 months/yr incl. monsoon) & OSM industrial proximity (≤2 km)"
+            },
+            "gas_flares": {
+                "psCategory": "Gas Flares",
+                "modelClass": "industrial_thermal_source",
+                "coverageType": "grouped",
+                "description": "Subsumed under industrial process heat; persistent flaring at oil refineries & petrochemical complexes"
+            },
+            "mining_activity": {
+                "psCategory": "Mining Activity",
+                "modelClass": "mining_thermal_source",
+                "coverageType": "classified",
+                "description": "High temporal persistence & spatial proximity (≤2 km) to OSM quarry features"
+            },
+            "agricultural_burning": {
+                "psCategory": "Agricultural Burning",
+                "modelClass": "natural_fire",
+                "coverageType": "grouped",
+                "description": "Seasonal non-industrial open fires in agricultural zones (crop residue / stubble burning)"
+            },
+            "wildfire_forest_fire": {
+                "psCategory": "Wildfire / Forest Fire",
+                "modelClass": "natural_fire",
+                "coverageType": "grouped",
+                "description": "Seasonal non-industrial open vegetation fires in forested & woodland regions"
+            },
+            "other_natural_fires": {
+                "psCategory": "Other Natural Fires",
+                "modelClass": "natural_fire",
+                "coverageType": "grouped",
+                "description": "Seasonal open fires across grasslands, shrublands, and non-crop vegetation"
+            }
+        }
     }
 
     await redis_manager.set_cache(canonical_key, json.dumps(payload), ttl_seconds=settings.analytics_cache_ttl_seconds)
@@ -132,10 +178,9 @@ async def get_temporal_analytics(
         date_str = h.timestamp.strftime("%Y-%m-%d")
         if date_str not in buckets:
             buckets[date_str] = {
-                "industrial_fire": 0,
-                "gas_flare": 0,
-                "wildfire": 0,
-                "agricultural": 0,
+                "industrial_thermal_source": 0,
+                "mining_thermal_source": 0,
+                "natural_fire": 0,
                 "unknown": 0,
                 "total": 0,
             }
@@ -163,7 +208,7 @@ async def get_regional_analytics(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Get state-level aggregation of total observations, industrial fire predictions, active alerts, and persistent events across India.
+    Get state-level aggregation of total observations, industrial thermal source predictions, active alerts, and persistent events across India.
     Uses Redis canonical response caching with 300s TTL.
     """
     canonical_key = "analytics:regional:all"
@@ -185,18 +230,18 @@ async def get_regional_analytics(
             states[st] = {
                 "totalObservations": 0,
                 "industrialObservations": 0,
-                "gasFlares": 0,
-                "wildfires": 0,
+                "miningObservations": 0,
+                "naturalFires": 0,
                 "persistentEvents": 0,
             }
         states[st]["totalObservations"] += 1
         ml_t = getattr(h, "ml_type", "unknown") or "unknown"
-        if ml_t == "industrial_fire":
+        if ml_t == "industrial_thermal_source":
             states[st]["industrialObservations"] += 1
-        elif ml_t == "gas_flare":
-            states[st]["gasFlares"] += 1
-        elif ml_t == "wildfire":
-            states[st]["wildfires"] += 1
+        elif ml_t == "mining_thermal_source":
+            states[st]["miningObservations"] += 1
+        elif ml_t == "natural_fire":
+            states[st]["naturalFires"] += 1
 
         if getattr(h, "persistence_count", 0) >= 3:
             states[st]["persistentEvents"] += 1

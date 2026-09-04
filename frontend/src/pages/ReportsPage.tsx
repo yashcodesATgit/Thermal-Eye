@@ -20,10 +20,9 @@ interface ReportData {
   };
   executiveSummary: {
     totalObservations: number;
-    predictedIndustrialFires: number;
-    predictedGasFlares: number;
-    predictedWildfires: number;
-    agriculturalObservations: number;
+    predictedIndustrialThermalSources: number;
+    predictedMiningThermalSources: number;
+    predictedNaturalFires: number;
     unknownObservations: number;
     persistentThermalEvents: number;
     highFrpEvents: number;
@@ -90,7 +89,7 @@ export default function ReportsPage(): React.JSX.Element {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `thermaleye_report_${selectedState}_${Date.now()}.csv`);
+      link.setAttribute('download', `thermaltrace_report_${selectedState}_${Date.now()}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -105,7 +104,7 @@ export default function ReportsPage(): React.JSX.Element {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `thermaleye_report_${Date.now()}.json`);
+    link.setAttribute('download', `thermaltrace_report_${Date.now()}.json`);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -120,15 +119,15 @@ export default function ReportsPage(): React.JSX.Element {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#080C14] text-[#E8EDF5]">
       <Navbar />
 
-      <main className="flex-1 w-full p-6 overflow-y-auto max-w-7xl mx-auto space-y-6">
+      <main className="flex-1 w-full p-3 sm:p-6 overflow-y-auto max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E2D45] pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-[#1E2D45] pb-4 sm:pb-5">
           <div>
             <div className="flex items-center gap-2">
               <div className="p-2 bg-[#2D7DD2]/10 border border-[#2D7DD2]/30 rounded-lg text-[#2D7DD2]">
-                <FileText className="w-5 h-5" />
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#E8EDF5]">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#E8EDF5]">
                 Intelligence Report Generator
               </h1>
             </div>
@@ -139,13 +138,13 @@ export default function ReportsPage(): React.JSX.Element {
         </div>
 
         {/* Configuration Form Bar */}
-        <div className="bg-[#111827] border border-[#1E2D45] p-5 rounded-xl space-y-4 shadow-xl">
-          <h3 className="text-sm font-bold text-[#E8EDF5] flex items-center gap-2">
+        <div className="bg-[#111827] border border-[#1E2D45] p-4 sm:p-5 rounded-xl space-y-4 shadow-xl">
+          <h3 className="text-xs sm:text-sm font-bold text-[#E8EDF5] flex items-center gap-2">
             <Filter className="w-4 h-4 text-[#2D7DD2]" />
             <span>Configure Report Parameters</span>
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div>
               <label className="text-[10px] font-bold text-[#7A8FA8] uppercase block mb-1">State / Scope</label>
               <select
@@ -171,11 +170,10 @@ export default function ReportsPage(): React.JSX.Element {
                 className="w-full bg-[#080C14] border border-[#1E2D45] rounded-lg px-3 py-2 text-xs text-[#E8EDF5] focus:outline-none"
               >
                 <option value="all">All Classifications</option>
-                <option value="industrial_fire">Industrial Fire</option>
-                <option value="gas_flare">Gas Flare</option>
-                <option value="wildfire">Wildfire</option>
-                <option value="agricultural">Agricultural</option>
-                <option value="unknown">Unknown</option>
+                <option value="industrial_thermal_source">Industrial Thermal Source</option>
+                <option value="mining_thermal_source">Mining Thermal Source</option>
+                <option value="natural_fire">Natural Fire</option>
+                <option value="unknown">Unknown / Unclassified</option>
               </select>
             </div>
 
@@ -211,20 +209,20 @@ export default function ReportsPage(): React.JSX.Element {
         {error ? (
           <div className="p-8 text-center text-xs text-red-400 bg-red-950/20 border border-red-500/20 rounded-xl">{error}</div>
         ) : report ? (
-          <div className="bg-[#111827] border border-[#1E2D45] rounded-2xl p-6 space-y-6 shadow-2xl">
+          <div className="bg-[#111827] border border-[#1E2D45] rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xl">
             {/* Report Header & Action Bar */}
             <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#1E2D45] pb-4 gap-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#2D7DD2]/10 text-[#2D7DD2] border border-[#2D7DD2]/30 text-[10px] font-bold uppercase tracking-wider mb-1">
-                  Official ThermalEye Incident Report
+                  Official ThermalTrace Incident Report
                 </div>
-                <h2 className="text-xl font-bold text-[#E8EDF5]">{report.reportMetadata.title}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-[#E8EDF5]">{report.reportMetadata.title}</h2>
                 <div className="text-xs text-[#7A8FA8] mt-0.5">
                   Scope: <strong className="text-[#E8EDF5]">{report.reportMetadata.scope}</strong> | Generated: {new Date(report.reportMetadata.generatedAt).toLocaleString()}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={handleDownloadJSON}
                   className="px-3 py-1.5 bg-[#162033] hover:bg-[#1E2D45] text-[#E8EDF5] border border-[#1E2D45] rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
@@ -252,22 +250,22 @@ export default function ReportsPage(): React.JSX.Element {
             {/* Executive Summary Grid */}
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#7A8FA8]">1. Executive Summary</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-[#080C14] border border-[#1E2D45] p-3.5 rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                <div className="bg-[#080C14] border border-[#1E2D45] p-3 sm:p-3.5 rounded-xl">
                   <span className="text-[10px] text-[#7A8FA8] uppercase font-bold block">Total Observations</span>
-                  <span className="text-xl font-extrabold text-[#E8EDF5] mt-0.5 block">{report.executiveSummary.totalObservations}</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-[#E8EDF5] mt-0.5 block">{report.executiveSummary.totalObservations}</span>
                 </div>
-                <div className="bg-[#080C14] border border-[#1E2D45] p-3.5 rounded-xl">
-                  <span className="text-[10px] text-[#7A8FA8] uppercase font-bold block">Predicted Industrial Fires</span>
-                  <span className="text-xl font-extrabold text-red-400 mt-0.5 block">{report.executiveSummary.predictedIndustrialFires}</span>
+                <div className="bg-[#080C14] border border-[#1E2D45] p-3 sm:p-3.5 rounded-xl">
+                  <span className="text-[10px] text-[#7A8FA8] uppercase font-bold block">Predicted Industrial Thermal Sources</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-red-400 mt-0.5 block">{report.executiveSummary.predictedIndustrialThermalSources}</span>
                 </div>
-                <div className="bg-[#080C14] border border-[#1E2D45] p-3.5 rounded-xl">
-                  <span className="text-[10px] text-[#7A8FA8] uppercase font-bold block">Gas Flares</span>
-                  <span className="text-xl font-extrabold text-amber-400 mt-0.5 block">{report.executiveSummary.predictedGasFlares}</span>
+                <div className="bg-[#080C14] border border-[#1E2D45] p-3 sm:p-3.5 rounded-xl">
+                  <span className="text-[10px] text-[#7A8FA8] uppercase font-bold block">Mining Thermal Sources</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-amber-400 mt-0.5 block">{report.executiveSummary.predictedMiningThermalSources}</span>
                 </div>
-                <div className="bg-[#080C14] border border-[#1E2D45] p-3.5 rounded-xl">
+                <div className="bg-[#080C14] border border-[#1E2D45] p-3 sm:p-3.5 rounded-xl">
                   <span className="text-[10px] text-[#7A8FA8] uppercase font-bold block">Persistent Events</span>
-                  <span className="text-xl font-extrabold text-orange-400 mt-0.5 block">{report.executiveSummary.persistentThermalEvents}</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-orange-400 mt-0.5 block">{report.executiveSummary.persistentThermalEvents}</span>
                 </div>
               </div>
             </div>
@@ -275,27 +273,27 @@ export default function ReportsPage(): React.JSX.Element {
             {/* Incident Records Table */}
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#7A8FA8]">2. Sample Incident Telemetry</h3>
-              <div className="overflow-x-auto border border-[#1E2D45] rounded-xl">
+              <div className="overflow-x-auto border border-[#1E2D45] rounded-xl custom-scrollbar">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#162033] text-[#7A8FA8] uppercase font-bold text-[10px]">
+                  <thead className="bg-[#162033] text-[#7A8FA8] uppercase font-bold text-[10px] whitespace-nowrap">
                     <tr>
-                      <th className="px-4 py-2.5">ID</th>
-                      <th className="px-4 py-2.5">Location</th>
-                      <th className="px-4 py-2.5">ML Prediction</th>
-                      <th className="px-4 py-2.5">Confidence</th>
-                      <th className="px-4 py-2.5">Severity</th>
-                      <th className="px-4 py-2.5">Facility Dist</th>
+                      <th className="px-3 sm:px-4 py-2.5">ID</th>
+                      <th className="px-3 sm:px-4 py-2.5">Location</th>
+                      <th className="px-3 sm:px-4 py-2.5">ML Prediction</th>
+                      <th className="px-3 sm:px-4 py-2.5">Confidence</th>
+                      <th className="px-3 sm:px-4 py-2.5">Severity</th>
+                      <th className="px-3 sm:px-4 py-2.5">Facility Dist</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1E2D45]/60 text-[#E8EDF5]">
                     {report.incidentRecords.slice(0, 10).map((inc) => (
                       <tr key={inc.id} className="hover:bg-[#162033]/40">
-                        <td className="px-4 py-2.5 font-mono text-[11px] text-[#2D7DD2]">{inc.id}</td>
-                        <td className="px-4 py-2.5 font-mono text-[11px] text-[#7A8FA8]">{inc.latitude.toFixed(3)}°, {inc.longitude.toFixed(3)}°</td>
-                        <td className="px-4 py-2.5 capitalize">{inc.predictedClassification.replace('_', ' ')}</td>
-                        <td className="px-4 py-2.5 font-mono">{(inc.mlConfidence * 100).toFixed(0)}%</td>
-                        <td className="px-4 py-2.5 capitalize">{inc.severity}</td>
-                        <td className="px-4 py-2.5 font-mono text-[#7A8FA8]">{inc.facilityDistanceKm ? `${inc.facilityDistanceKm.toFixed(1)} km` : 'N/A'}</td>
+                        <td className="px-3 sm:px-4 py-2.5 font-mono text-[11px] text-[#2D7DD2] whitespace-nowrap">{inc.id}</td>
+                        <td className="px-3 sm:px-4 py-2.5 font-mono text-[11px] text-[#7A8FA8] whitespace-nowrap">{inc.latitude.toFixed(3)}°, {inc.longitude.toFixed(3)}°</td>
+                        <td className="px-3 sm:px-4 py-2.5 capitalize whitespace-nowrap">{inc.predictedClassification.replace('_', ' ')}</td>
+                        <td className="px-3 sm:px-4 py-2.5 font-mono whitespace-nowrap">{(inc.mlConfidence * 100).toFixed(0)}%</td>
+                        <td className="px-3 sm:px-4 py-2.5 capitalize whitespace-nowrap">{inc.severity}</td>
+                        <td className="px-3 sm:px-4 py-2.5 font-mono text-[#7A8FA8] whitespace-nowrap">{inc.facilityDistanceKm ? `${inc.facilityDistanceKm.toFixed(1)} km` : 'N/A'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -312,6 +310,7 @@ export default function ReportsPage(): React.JSX.Element {
               <ul className="list-disc list-inside text-[#7A8FA8] text-[11px] space-y-1">
                 <li>Telemetry source: {report.scientificDisclosures.satelliteSource}</li>
                 <li>Model Information: {report.scientificDisclosures.modelInformation}</li>
+                <li>Problem Statement Taxonomy Mapping: Industrial Fires / Gas Flares map to industrial_thermal_source; Mining Activity maps to mining_thermal_source; Agricultural Burning, Wildfires, Forest Fires & Natural Fires map to natural_fire.</li>
                 <li>Benchmark Accuracy: {report.scientificDisclosures.benchmarkAccuracy}</li>
                 <li>Proximity Notice: {report.scientificDisclosures.nonCausationNotice}</li>
               </ul>

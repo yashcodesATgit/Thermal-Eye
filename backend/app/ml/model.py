@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any, List
 logger = logging.getLogger(__name__)
 
 ML_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(ML_DIR, "models", "xgboost_v1_1m_v2.joblib")
+MODEL_PATH = os.path.join(ML_DIR, "models", "thermalwatch_model.joblib")
 
 
 class MLModelManager:
@@ -18,13 +18,12 @@ class MLModelManager:
 
     _instance: Optional["MLModelManager"] = None
     _model: Any = None
-    _class_names: List[str] = ["industrial_fire", "gas_flare", "agricultural", "wildfire", "unknown"]
+    _class_names: List[str] = ["industrial_thermal_source", "mining_thermal_source", "natural_fire", "unknown"]
     _feature_columns: List[str] = [
-        "bright_ti4", "bright_ti5", "brightness_ratio", "temp_diff",
-        "frp", "frp_density", "confidence_norm", "is_day",
-        "facility_dist_km", "persistence_count"
+        "obs_count", "log_mean_frp", "log_std_frp", "frp_cv",
+        "months_active", "nearest_osm_distance_km", "active_duration_days", "first_seen_month"
     ]
-    _model_version: str = "xgboost-v1-1m-v2"
+    _model_version: str = "thermalwatch-v1"
     _loaded: bool = False
 
     def __new__(cls):

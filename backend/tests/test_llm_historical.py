@@ -17,7 +17,7 @@ async def test_tool_executor_get_history_observation_vs_event():
     mock_count_res.scalar.return_value = 100
 
     mock_group_res = MagicMock()
-    mock_group_res.all.return_value = [("industrial_fire", 30), ("wildfire", 70)]
+    mock_group_res.all.return_value = [("industrial_thermal_source", 30), ("natural_fire", 70)]
 
     mock_db.execute.side_effect = [mock_count_res, mock_group_res]
 
@@ -26,7 +26,7 @@ async def test_tool_executor_get_history_observation_vs_event():
 
     assert res["observationCount"] == 100
     assert res["uniqueEventCount"] == 72
-    assert res["modelVersion"] == "xgboost-v1-1m-v2"
+    assert res["modelVersion"] == "thermalwatch-v1"
     assert "classificationDistribution" in res
 
 

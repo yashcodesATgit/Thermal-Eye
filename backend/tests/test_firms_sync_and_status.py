@@ -1,33 +1,35 @@
 """
-Unit tests for FIRMS Sync & Status Manager and lightweight endpoints.
-Verifies status classification (live/delayed/stale/degraded), 5-hour cooldown, concurrency locking, and status payload integration.
+Unit tests for FIRMS Sync & Status Manager, 6-hour scheduler, and lightweight status endpoints.
+Verifies status classification (live/delayed/stale/degraded), 6-hour cooldown, concurrency locking, and status payload integration.
 """
-import pytest
-from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from app.services.firms_status import FIRMSSyncManager
+import pytest
+from fastapi import BackgroundTasks
+
 from app.api.v1.firms import get_firms_status
 from app.api.v1.health import health_check
+from app.services.firms_status import FIRMSSyncManager
 
 
 def test_firms_status_classification():
-    """Verify status transitions based on last successful sync age."""
+    """Verify status transitions based on 6-hour interval and 12-hour stale threshold."""
     mgr = FIRMSSyncManager()
 
     now = datetime.now(timezone.utc)
 
-    # 1. Fresh (Synced < 1h ago) -> "live"
-    mgr.last_sync_success_at = now - timedelta(minutes=30)
+    # 1. Fresh (Synced < 6h ago) -> "live"
+    mgr.last_sync_success_at = now - timedelta(hours=3)
     mgr.last_sync_status = "success"
     assert mgr.get_status_classification() == "live"
 
-    # 2. Aging (Synced 1h-3h ago) -> "delayed"
-    mgr.last_sync_success_at = now - timedelta(hours=2)
+    # 2. Aging (Synced 6h-12h ago) -> "delayed"
+    mgr.last_sync_success_at = now - timedelta(hours=8)
     assert mgr.get_status_classification() == "delayed"
 
-    # 3. Stale (Synced > 3h ago) -> "stale"
-    mgr.last_sync_success_at = now - timedelta(hours=5)
+    # 3. Stale (Synced > 12h ago) -> "stale"
+    mgr.last_sync_success_at = now - timedelta(hours=15)
     assert mgr.get_status_classification() == "stale"
 
     # 4. Failed/Degraded -> "degraded"
@@ -37,10 +39,10 @@ def test_firms_status_classification():
 
 @pytest.mark.anyio
 async def test_firms_cooldown_and_lock():
-    """Verify 1-hour cooldown prevents unnecessary FIRMS API calls."""
+    """Verify 6-hour cooldown prevents unnecessary FIRMS API calls when fresh."""
     mgr = FIRMSSyncManager()
     now = datetime.now(timezone.utc)
-    mgr.last_sync_success_at = now - timedelta(minutes=20)  # 20 minutes ago (within 1h cooldown)
+    mgr.last_sync_success_at = now - timedelta(hours=3)  # 3 hours ago (within 6h cooldown)
 
     executed = await mgr.execute_sync_if_needed(force=False)
     assert executed is False
@@ -55,13 +57,15 @@ async def test_firms_status_endpoint():
     assert "latestObservationAt" in res
     assert "satellites" in res
     assert res["satellites"] == ["SNPP", "NOAA-20", "NOAA-21"]
+    assert res["syncIntervalHours"] == 6
 
 
 @pytest.mark.anyio
 async def test_health_check_with_firms_summary():
     """Verify GET /api/v1/health includes firms summary metadata."""
     mock_db = AsyncMock()
-    res = await health_check(db=mock_db)
+    mock_bt = BackgroundTasks()
+    res = await health_check(background_tasks=mock_bt, db=mock_db)
     assert "status" in res
     assert "firms" in res
     assert "status" in res["firms"]

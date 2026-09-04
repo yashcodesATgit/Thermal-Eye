@@ -133,15 +133,16 @@ class TestParseVIIRSCsv:
         assert r["longitude"] == pytest.approx(70.8022)
         assert r["brightness"] == pytest.approx(340.0)
         assert r["confidence"] == 90.0   # 'h' → 90
-        assert r["type"] == "wildfire"   # type column present with value '0' → wildfire
+        assert r["type"] == "unknown"    # always unknown now
         assert r["status"] == "active"
         assert r["country"] == "India"
         assert r["source"] == "VIIRS_SNPP_NRT"  # source traceability
         assert isinstance(r["timestamp"], datetime)
+        assert r["frp"] == pytest.approx(5.2)
 
     def test_real_firms_format_no_type_column_defaults_to_unknown(self):
         """CRITICAL: Real NASA FIRMS NRT responses have no 'type' column.
-        The normalizer must default to 'unknown', NOT 'wildfire'."""
+        The normalizer must default to 'unknown', NOT 'natural_fire'."""
         csv_text = f"{VIIRS_HEADER_REAL}\n{_viirs_row_real()}"
         records = parse_firms_csv(csv_text, "VIIRS_SNPP_NRT")
         assert len(records) == 1
@@ -201,12 +202,17 @@ class TestParseVIIRSCsv:
     def test_gas_flare_type(self):
         csv_text = f"{VIIRS_HEADER}\n{_viirs_row(fire_type='2')}"
         r = parse_firms_csv(csv_text, "VIIRS_SNPP_NRT")[0]
-        assert r["type"] == "gas_flare"
+        assert r["type"] == "unknown"
 
     def test_industrial_fire_type(self):
         csv_text = f"{VIIRS_HEADER}\n{_viirs_row(fire_type='3')}"
         r = parse_firms_csv(csv_text, "VIIRS_SNPP_NRT")[0]
-        assert r["type"] == "industrial_fire"
+        assert r["type"] == "unknown"
+
+    def test_frp_is_none_if_missing(self):
+        csv_text = f"{VIIRS_HEADER}\n{_viirs_row(frp='')}"
+        r = parse_firms_csv(csv_text, "VIIRS_SNPP_NRT")[0]
+        assert r["frp"] is None
 
 
 class TestParseMODISCsv:
@@ -216,7 +222,8 @@ class TestParseMODISCsv:
         assert len(records) == 1
         r = records[0]
         assert r["confidence"] == 85.0
-        assert r["type"] == "industrial_fire"  # type=3
+        assert r["type"] == "unknown"  # type=3 is always unknown
+        assert r["frp"] == pytest.approx(5.2)
 
     def test_modis_confidence_capped_at_100(self):
         csv_text = f"{MODIS_HEADER}\n{_modis_row(confidence='105')}"

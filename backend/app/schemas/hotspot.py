@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 HotspotType = Literal[
-    "industrial_fire", "gas_flare", "agricultural", "wildfire", "unknown"
+    "industrial_thermal_source", "mining_thermal_source", "natural_fire", "unknown"
 ]
 Severity = Literal["low", "medium", "high", "critical"]
 HotspotStatus = Literal["active", "resolved", "monitoring"]
@@ -38,12 +38,15 @@ class HotspotResponse(BaseModel):
     model_version: Optional[str] = Field(None, alias="modelVersion", serialization_alias="modelVersion")
     ml_explanation: Optional[str] = Field(None, alias="mlExplanation", serialization_alias="mlExplanation")
 
+    # ESA WorldCover 10m land-cover context
+    land_cover_class: Optional[int] = Field(None, alias="landCoverClass", serialization_alias="landCoverClass")
+    land_cover_name: Optional[str] = Field(None, alias="landCoverName", serialization_alias="landCoverName")
+
 
 class ActivityByType(BaseModel):
-    industrial_fire: int = Field(0, alias="industrialFire", serialization_alias="industrialFire")
-    gas_flare: int = Field(0, alias="gasFlare", serialization_alias="gasFlare")
-    agricultural: int = 0
-    wildfire: int = 0
+    industrial_thermal_source: int = Field(0, alias="industrialThermalSource", serialization_alias="industrialThermalSource")
+    mining_thermal_source: int = Field(0, alias="miningThermalSource", serialization_alias="miningThermalSource")
+    natural_fire: int = Field(0, alias="naturalFire", serialization_alias="naturalFire")
     unknown: int = 0
     
     model_config = ConfigDict(populate_by_name=True)
@@ -52,7 +55,9 @@ class ActivityByType(BaseModel):
 class ActivityDayResponse(BaseModel):
     date: str  # YYYY-MM-DD
     total: int
+    unique_sources: int = Field(0, alias="uniqueSources", serialization_alias="uniqueSources")
     by_type: ActivityByType = Field(..., alias="byType", serialization_alias="byType")
+    by_type_unique: ActivityByType = Field(..., alias="byTypeUnique", serialization_alias="byTypeUnique")
     
     model_config = ConfigDict(populate_by_name=True)
 

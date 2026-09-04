@@ -7,7 +7,7 @@ export interface MapViewport {
 }
 
 export const DEFAULT_MAP_CENTER: [number, number] = [78.9629, 22.5];
-export const DEFAULT_MAP_ZOOM = 4.8;
+export const DEFAULT_MAP_ZOOM = 4.2;
 export const DEFAULT_MAP_BEARING = 0;
 export const DEFAULT_MAP_PITCH = 0;
 

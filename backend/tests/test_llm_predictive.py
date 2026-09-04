@@ -38,7 +38,7 @@ async def test_tool_executor_get_anomalies_detection():
 
     # Create 6 mock hotspots with high FRP & persistence
     mock_hotspots = [
-        MagicMock(frp=42.0, persistence_count=4, ml_type="industrial_fire", state="Maharashtra")
+        MagicMock(frp=42.0, persistence_count=4, ml_type="industrial_thermal_source", state="Maharashtra")
         for _ in range(6)
     ]
 
@@ -60,7 +60,7 @@ async def test_tool_executor_get_anomalies_detection():
 def test_predictive_safety_prompt_rules():
     """Verify system prompt enforces forecasting refusal gate and forbids fake future probabilities."""
     assert "PREDICTIVE INTELLIGENCE & FORECASTING REFUSAL GATE" in SYSTEM_PROMPT
-    assert "ThermalEye currently does not provide a validated future-fire forecast" in SYSTEM_PROMPT
+    assert "ThermalTrace currently does not provide a validated future-fire forecast" in SYSTEM_PROMPT
     assert "NO FAKE PROBABILITIES: Never invent future event probabilities" in SYSTEM_PROMPT
     assert "EARLY WARNING LANGUAGE" in SYSTEM_PROMPT
     assert "ANOMALY CATEGORIES: ACTIVITY_SPIKE, FRP_ANOMALY, PERSISTENCE_ANOMALY" in SYSTEM_PROMPT

@@ -1,5 +1,5 @@
 """
-Read-Only Backend Tool Registry & Analytical Computation Layer for ThermalEye LLM Assistant.
+Read-Only Backend Tool Registry & Analytical Computation Layer for ThermalTrace LLM Assistant.
 Defines JSON tool schemas and async tool execution handlers.
 """
 import logging
@@ -26,7 +26,7 @@ TOOL_DECLARATIONS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "classification": {"type": "string", "description": "Predicted source type (industrial_fire, gas_flare, agricultural, wildfire, unknown)"},
+                "classification": {"type": "string", "description": "Predicted source type (industrial_thermal_source, mining_thermal_source, natural_fire, unknown)"},
                 "state": {"type": "string", "description": "Indian state name (e.g. Gujarat, Maharashtra)"},
                 "severity": {"type": "string", "description": "Hotspot severity (low, medium, high)"},
                 "confidence_min": {"type": "number", "description": "Minimum ML model confidence (0.0 to 1.0)"},
@@ -119,7 +119,7 @@ TOOL_DECLARATIONS = [
     },
     {
         "name": "compare_regions",
-        "description": "Compare thermal metrics between two Indian states or rank top states across India by observation volume and industrial prediction count.",
+        "description": "Compare thermal metrics between two Indian states or rank top states across India by observation volume and industrial thermal source prediction count.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -135,7 +135,7 @@ TOOL_DECLARATIONS = [
             "type": "object",
             "properties": {
                 "rank_by": {"type": "string", "description": "Ranking metric: 'confidence', 'frp', 'persistence', or 'severity' (default 'confidence')"},
-                "classification": {"type": "string", "description": "Optional classification filter (e.g. industrial_fire)"},
+                "classification": {"type": "string", "description": "Optional classification filter (e.g. industrial_thermal_source)"},
                 "limit": {"type": "integer", "description": "Maximum candidate count (default 10)"}
             }
         }
@@ -147,7 +147,7 @@ TOOL_DECLARATIONS = [
             "type": "object",
             "properties": {
                 "state": {"type": "string", "description": "Optional state filter (e.g. Maharashtra)"},
-                "classification": {"type": "string", "description": "Optional classification filter (e.g. industrial_fire)"}
+                "classification": {"type": "string", "description": "Optional classification filter (e.g. industrial_thermal_source)"}
             }
         }
     }
@@ -258,7 +258,7 @@ class ToolExecutor:
             "rawConfidence": h.confidence,
             "mlType": getattr(h, "ml_type", "unknown"),
             "mlConfidence": getattr(h, "ml_confidence", 0.0),
-            "modelVersion": getattr(h, "model_version", "xgboost-v1-1m-v2"),
+            "modelVersion": getattr(h, "model_version", "thermalwatch-v1"),
             "frp": getattr(h, "frp", None),
             "brightness": getattr(h, "brightness", None),
             "brightTi5": getattr(h, "bright_ti5", None),
@@ -274,6 +274,8 @@ class ToolExecutor:
                 "frp": 0.18,
                 "persistence_count": 0.12
             }),
+            "landCoverClass": getattr(h, "land_cover_class", None),
+            "landCoverName": getattr(h, "land_cover_name", None),
             "timestamp": h.timestamp.isoformat() if h.timestamp else None
         }
 
@@ -350,7 +352,7 @@ class ToolExecutor:
             "uniqueEventCount": round(total_obs * 0.72),  # Estimated distinct spatial event clusters
             "totalHistoricalObservations": total_obs,
             "classificationDistribution": distribution,
-            "modelVersion": "xgboost-v1-1m-v2",
+            "modelVersion": "thermalwatch-v1",
             "dateRange": "Past 7 Days (Live Ingestion Window)",
             "sources": ["VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
         }
@@ -372,7 +374,7 @@ class ToolExecutor:
             "latestAcquisitionTimestamp": latest_ts.isoformat() if latest_ts else "Unknown",
             "totalStoredObservations": total_count,
             "modelStatus": "LOADED" if model_manager.is_loaded else "UNINITIALIZED",
-            "modelVersion": "xgboost-v1-1m-v2",
+            "modelVersion": "thermalwatch-v1",
             "activeSatellites": ["VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
         }
 

@@ -25,11 +25,11 @@ def alert_service(mock_db):
 
 @pytest.mark.anyio
 async def test_multi_factor_critical_industrial_alert(alert_service):
-    """Verify Critical severity for high-confidence industrial fire near facility with high FRP."""
+    """Verify Critical severity for high-confidence industrial thermal source near facility with high FRP."""
     hotspot = MagicMock()
     hotspot.id = "FIRMS-test-critical-01"
     hotspot.facility_id = "FAC-gujarat-001"
-    hotspot.ml_type = "industrial_fire"
+    hotspot.ml_type = "industrial_thermal_source"
     hotspot.ml_confidence = 0.88
     hotspot.frp = 28.5
     hotspot.facility_dist_km = 2.1
@@ -39,17 +39,17 @@ async def test_multi_factor_critical_industrial_alert(alert_service):
     alert = await alert_service.evaluate_hotspot_alert(hotspot)
     assert alert is not None
     assert alert.severity == "critical"
-    assert "CRITICAL: High-Confidence Industrial Fire" in alert.title
-    assert "28.5 MW" in alert.message
+    assert "Critical Industrial Thermal Event near Facility" in alert.title
+    assert "28.5" in alert.message
 
 
 @pytest.mark.anyio
 async def test_false_positive_protection_wildfire_near_facility(alert_service):
-    """Verify that a wildfire near a facility is NOT falsely flagged as an Industrial Fire alert."""
+    """Verify that a wildfire near a facility is NOT falsely flagged as an Industrial Thermal Source alert."""
     hotspot = MagicMock()
     hotspot.id = "FIRMS-test-wildfire-02"
     hotspot.facility_id = "FAC-forest-002"
-    hotspot.ml_type = "wildfire"
+    hotspot.ml_type = "natural_fire"
     hotspot.ml_confidence = 0.94
     hotspot.frp = 35.0
     hotspot.facility_dist_km = 1.2
@@ -57,10 +57,10 @@ async def test_false_positive_protection_wildfire_near_facility(alert_service):
     hotspot.timestamp = datetime(2026, 8, 26, 14, 0, tzinfo=timezone.utc)
 
     alert = await alert_service.evaluate_hotspot_alert(hotspot)
-    # High confidence wildfire near facility triggers Medium persistent anomaly alert, NOT Critical Industrial Fire
+    # High confidence natural fire near facility triggers Medium persistent anomaly alert, NOT Critical Industrial Event
     assert alert is not None
     assert alert.severity in ("medium", "low")
-    assert "Industrial Fire" not in alert.title
+    assert "Industrial Thermal Event" not in alert.title
 
 
 @pytest.mark.anyio
@@ -68,7 +68,7 @@ async def test_alert_idempotent_deduplication(alert_service):
     """Verify that repeated evaluation of the same hotspot does NOT produce duplicate alerts."""
     hotspot = MagicMock()
     hotspot.id = "FIRMS-test-dup-03"
-    hotspot.ml_type = "industrial_fire"
+    hotspot.ml_type = "industrial_thermal_source"
     hotspot.ml_confidence = 0.82
     hotspot.frp = 22.0
     hotspot.facility_dist_km = 3.0

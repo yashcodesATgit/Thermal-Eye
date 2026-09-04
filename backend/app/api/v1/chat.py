@@ -1,5 +1,5 @@
 """
-FastAPI Chat Router for ThermalEye AI Intelligence Assistant.
+FastAPI Chat Router for ThermalTrace AI Intelligence Assistant.
 Exposes POST /api/v1/chat.
 """
 import uuid

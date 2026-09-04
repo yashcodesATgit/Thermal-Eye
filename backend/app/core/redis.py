@@ -1,5 +1,5 @@
 """
-Centralized Redis Client Infrastructure for ThermalEye.
+Centralized Redis Client Infrastructure for ThermalTrace.
 Provides connection pooling, rate limiting, atomic AI quotas, analytics caching,
 distributed locking for FIRMS sync, and graceful failure fallbacks.
 """
@@ -32,9 +32,23 @@ class RedisManager:
     def __init__(self):
         self._pool: Optional[aioredis.ConnectionPool] = None
         self._client: Optional[aioredis.Redis] = None
+        self._loop_id: Optional[int] = None
+
+    def _check_loop(self):
+        """Reset pool and client if running inside a new or different event loop (e.g. during pytest execution)."""
+        try:
+            loop = asyncio.get_running_loop()
+            current_id = id(loop)
+            if self._loop_id != current_id:
+                self._pool = None
+                self._client = None
+                self._loop_id = current_id
+        except RuntimeError:
+            pass
 
     def _get_pool(self) -> aioredis.ConnectionPool:
         """Lazy-initialize Redis connection pool."""
+        self._check_loop()
         if self._pool is None:
             logger.info("Initializing Redis connection pool at: %s", settings.redis_url)
             self._pool = aioredis.ConnectionPool.from_url(
@@ -46,13 +60,7 @@ class RedisManager:
 
     def get_client(self) -> aioredis.Redis:
         """Get an async Redis client from the shared connection pool."""
-        try:
-            loop = asyncio.get_running_loop()
-            if self._client is not None and getattr(self._client, "_loop", None) not in (None, loop):
-                self._client = None
-        except RuntimeError:
-            pass
-
+        self._check_loop()
         if self._client is None:
             pool = self._get_pool()
             self._client = aioredis.Redis(connection_pool=pool)
@@ -61,11 +69,20 @@ class RedisManager:
     async def close(self):
         """Close client and connection pool cleanly."""
         if self._client:
-            await self._client.aclose()
-            self._client = None
+            try:
+                await self._client.aclose()
+            except Exception:
+                pass
+            finally:
+                self._client = None
+
         if self._pool:
-            await self._pool.aclose()
-            self._pool = None
+            try:
+                await self._pool.aclose()
+            except Exception:
+                pass
+            finally:
+                self._pool = None
 
     async def ping(self) -> bool:
         """Non-blocking Redis PING health check."""

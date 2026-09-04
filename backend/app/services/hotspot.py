@@ -93,11 +93,17 @@ class HotspotService:
             days.append({
                 "date": day_str,
                 "total": 0,
+                "unique_sources": 0,
                 "by_type": {
-                    "industrial_fire": 0,
-                    "gas_flare": 0,
-                    "agricultural": 0,
-                    "wildfire": 0,
+                    "industrial_thermal_source": 0,
+                    "mining_thermal_source": 0,
+                    "natural_fire": 0,
+                    "unknown": 0,
+                },
+                "by_type_unique": {
+                    "industrial_thermal_source": 0,
+                    "mining_thermal_source": 0,
+                    "natural_fire": 0,
                     "unknown": 0,
                 }
             })
@@ -112,8 +118,11 @@ class HotspotService:
             day_str = day_dt.strftime("%Y-%m-%d")
             if day_str in day_map:
                 count = row["count"]
+                unique_count = row["unique_source_count"]
                 type_ = row["type"]
                 day_map[day_str]["by_type"][type_] = count
                 day_map[day_str]["total"] += count
+                day_map[day_str]["by_type_unique"][type_] = unique_count
+                day_map[day_str]["unique_sources"] += unique_count
                 
         return {"days": days}

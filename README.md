@@ -1,7 +1,7 @@
-# ThermalEye
+# ThermalTrace
 **AI-Powered Geospatial Thermal Intelligence**
 
-ThermalEye is a full-stack platform for detecting, classifying, analyzing, and monitoring industrial thermal anomalies across India using satellite data, machine learning (XGBoost), and AI intelligence (Google Gemini).
+ThermalTrace is a full-stack platform for detecting, classifying, analyzing, and monitoring industrial thermal anomalies across India using satellite data, machine learning (XGBoost), and AI intelligence (Google Gemini).
 
 ---
 
@@ -16,7 +16,7 @@ ThermalEye is a full-stack platform for detecting, classifying, analyzing, and m
 
 ---
 
-## 🚀 Running ThermalEye Locally (Non-Docker Development)
+## 🚀 Running ThermalTrace Locally (Non-Docker Development)
 
 ### 1. Prerequisites
 - Python 3.11+ / 3.14
@@ -43,7 +43,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 🐳 Running ThermalEye with Docker Compose
+## 🐳 Running ThermalTrace with Docker Compose
 
 ### 1. Configure Environment
 Create a root `.env` file from `.env.example`:

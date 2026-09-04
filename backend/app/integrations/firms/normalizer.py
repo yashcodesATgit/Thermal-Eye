@@ -37,33 +37,23 @@ _VIIRS_CONFIDENCE_MAP: Dict[str, float] = {
 }
 
 # -------------------------------------------------------------------
-# FIRMS type integer → ThermalEye HotspotType string
+# FIRMS type integer → mapped string
 # -------------------------------------------------------------------
 _FIRMS_TYPE_MAP: Dict[int, str] = {
-    0: "wildfire",         # presumed vegetation fire
-    2: "gas_flare",        # offshore (usually gas flares)
-    3: "industrial_fire",  # other static land source (industrial)
+    0: "unknown",
+    2: "unknown",
+    3: "unknown",
 }
 
 
 def classify_india_hotspot(lat: float, lon: float, brightness: float, confidence: float, type_col: Any = None) -> str:
     """
     Classifies raw NASA FIRMS thermal anomaly observations.
-    
-    When the FIRMS CSV includes a 'type' column (integer), map it using
-    the standard FIRMS type codes (0=wildfire, 2=gas_flare, 3=industrial_fire).
-    
-    When the FIRMS CSV does NOT include a 'type' column (real NRT data),
-    return 'unknown'. Classification into specific categories is deferred
+
+    The raw satellite 'type' is no longer mapped into the production ML taxonomy.
+    Always returns 'unknown'. Classification into specific categories is deferred
     to Phase 6 ML pipeline.
     """
-    try:
-        if type_col is not None and str(type_col).strip() != "":
-            mapped = _FIRMS_TYPE_MAP.get(int(type_col))
-            if mapped:
-                return mapped
-    except (TypeError, ValueError):
-        pass
     return "unknown"
 
 
@@ -156,6 +146,9 @@ def _normalize_viirs_row(row: Dict[str, str], source: str) -> Dict[str, Any] | N
 
         type_col = row.get("type")
         type_val = classify_india_hotspot(lat, lon, brightness, confidence, type_col)
+
+        frp_raw = row.get("frp")
+        frp_val = float(frp_raw) if frp_raw else None
     except (KeyError, ValueError) as exc:
         logger.debug("Skipping VIIRS row (parse error): %s — row: %s", exc, row)
         return None
@@ -182,6 +175,7 @@ def _normalize_viirs_row(row: Dict[str, str], source: str) -> Dict[str, Any] | N
         "city": None,
         "district": None,
         "source": source,
+        "frp": frp_val,
     }
 
 
@@ -197,6 +191,9 @@ def _normalize_modis_row(row: Dict[str, str], source: str) -> Dict[str, Any] | N
 
         type_col = row.get("type")
         type_val = classify_india_hotspot(lat, lon, brightness, confidence, type_col)
+
+        frp_raw = row.get("frp")
+        frp_val = float(frp_raw) if frp_raw else None
     except (KeyError, ValueError) as exc:
         logger.debug("Skipping MODIS row (parse error): %s — row: %s", exc, row)
         return None
@@ -223,6 +220,7 @@ def _normalize_modis_row(row: Dict[str, str], source: str) -> Dict[str, Any] | N
         "city": None,
         "district": None,
         "source": source,
+        "frp": frp_val,
     }
 
 

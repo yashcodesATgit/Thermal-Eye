@@ -38,6 +38,10 @@ def _require_firms_key() -> None:
 # Single-source endpoint (Phase 5 baseline — preserved unchanged)
 # ---------------------------------------------------------------------------
 
+from sqlalchemy import select, func
+from app.db.models.hotspot import Hotspot
+from app.services.firms_status import firms_sync_manager
+
 @router.post(
     "/ingestion/firms",
     status_code=status.HTTP_200_OK,
@@ -79,8 +83,17 @@ async def ingest_firms(
     try:
         service = FIRMSIngestionService(db=db, map_key=settings.firms_map_key)
         summary = await service.ingest(source=source, bbox=bbox, days=effective_days)
+
+        stmt = select(func.max(Hotspot.timestamp))
+        max_res = await db.execute(stmt)
+        max_ts = max_res.scalar()
+        await firms_sync_manager.record_sync_success(
+            inserted=summary.get("inserted", 0),
+            latest_ts=max_ts,
+        )
     except Exception as exc:
         logger.error("FIRMS ingest error: %s", exc, exc_info=True)
+        firms_sync_manager.record_sync_failure(str(exc))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"FIRMS ingest failed: {exc}",
@@ -131,20 +144,6 @@ async def ingest_firms_all_sources(
 ):
     """
     Trigger NASA FIRMS multi-source ingestion for maximum India-wide coverage.
-
-    Returns an aggregated summary:
-      {
-        "sources_attempted": int,
-        "sources_succeeded": int,
-        "sources_failed":    int,
-        "total_fetched":     int,
-        "total_inserted":    int,
-        "total_skipped":     int,
-        "bbox":              str,
-        "days":              int,
-        "per_source":        [...],
-        "errors":            [...],
-      }
     """
     _require_firms_key()
 
@@ -171,13 +170,25 @@ async def ingest_firms_all_sources(
         summary = await service.ingest_all_sources(
             sources=effective_sources, bbox=bbox, days=effective_days
         )
+
+        stmt = select(func.max(Hotspot.timestamp))
+        max_res = await db.execute(stmt)
+        max_ts = max_res.scalar()
+
+        if summary.get("sources_succeeded", 0) > 0 or summary.get("total_fetched", 0) > 0 or summary.get("total_inserted", 0) > 0:
+            await firms_sync_manager.record_sync_success(
+                inserted=summary.get("total_inserted", 0),
+                latest_ts=max_ts,
+            )
+        elif summary.get("sources_failed", 0) > 0:
+            err_msg = "; ".join(e.get("error", "") for e in summary.get("errors", []))
+            firms_sync_manager.record_sync_failure(err_msg)
     except Exception as exc:
         logger.error("Multi-source FIRMS ingest error: %s", exc, exc_info=True)
+        firms_sync_manager.record_sync_failure(str(exc))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Multi-source FIRMS ingest failed: {exc}",
         ) from exc
 
-    # Surface errors from partial failures as warnings (not 5xx) since at
-    # least some data may have been persisted
     return summary

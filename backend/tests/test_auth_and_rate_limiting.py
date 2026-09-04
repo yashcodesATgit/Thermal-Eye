@@ -29,7 +29,7 @@ def test_password_hashing():
 def test_session_token_lifecycle():
     """Verify token generation, session retrieval, and token revocation."""
     user_id = "user-12345"
-    email = "analyst@thermaleye.org"
+    email = "analyst@thermaltrace.org"
     name = "Test Analyst"
 
     token = create_session(user_id, email, name)
@@ -51,8 +51,13 @@ async def test_rate_limiter_enforcement():
     test_id = "test-user-rate-limit-auth-file"
 
     # Delete previous key if present in Redis
-    client = redis_manager.get_client()
-    await client.delete(f"thermalwatch:quota:ai:guest:{test_id}")
+    redis_manager._client = None
+    redis_manager._pool = None
+    try:
+        client = redis_manager.get_client()
+        await client.delete(f"thermalwatch:quota:ai:guest:{test_id}")
+    except Exception:
+        pass
 
     # Anonymous AI limit test (10 requests max)
     for _ in range(10):
@@ -78,7 +83,7 @@ def test_supabase_jwt_verification(monkeypatch):
     # 1. Valid correctly signed token -> accepted
     valid_payload = {
         "sub": "supa-user-999",
-        "email": "supa@thermaleye.org",
+        "email": "supa@thermaltrace.org",
         "user_metadata": {"name": "Supabase Analyst"},
         "aud": "authenticated",
         "exp": int(time.time()) + 3600
@@ -87,7 +92,7 @@ def test_supabase_jwt_verification(monkeypatch):
     sess = get_session(valid_token)
     assert sess is not None
     assert sess["user_id"] == "supa-user-999"
-    assert sess["email"] == "supa@thermaleye.org"
+    assert sess["email"] == "supa@thermaltrace.org"
 
     # 2. Invalid signature -> rejected
     invalid_token = jwt.encode(valid_payload, "wrong-secret", algorithm="HS256")

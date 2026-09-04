@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 HotspotType = Literal[
-    "industrial_fire", "gas_flare", "agricultural", "wildfire", "unknown"
+    "industrial_thermal_source", "mining_thermal_source", "natural_fire", "unknown"
 ]
 Severity = Literal["low", "medium", "high", "critical"]
 HotspotStatus = Literal["active", "resolved", "monitoring"]

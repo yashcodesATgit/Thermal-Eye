@@ -59,19 +59,10 @@ button {
   font-family: inherit;
 }
 
-/* MapLibre attribution dark styling */
-.maplibregl-ctrl-attrib {
-  background-color: rgba(8, 12, 20, 0.7) !important;
-  color: #7A8FA8 !important;
-  font-size: 10px !important;
-}
-
-.maplibregl-ctrl-attrib a {
-  color: #7A8FA8 !important;
-}
-
-.maplibregl-ctrl-attrib-button {
-  background-color: rgba(15, 22, 35, 0.9) !important;
+/* Hide MapLibre attribution overlay text */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib {
+  display: none !important;
 }
 
 /* Overlay panel base: solid dark, no blur for performance */

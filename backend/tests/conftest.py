@@ -1,5 +1,5 @@
 """
-Pytest configuration for ThermalEye backend tests.
+Pytest configuration for ThermalTrace backend tests.
 """
 import os
 import pytest
@@ -17,9 +17,7 @@ def setup_test_env(monkeypatch):
         monkeypatch.setattr(settings, "firms_map_key", "test_mock_key")
 
 
-@pytest.fixture(autouse=True)
-async def cleanup_redis_client_autouse():
-    """Reset redis_manager client before and after each test to prevent closed loop errors."""
-    await redis_manager.close()
-    yield
+@pytest.fixture
+async def cleanup_redis_client():
+    """Reset redis_manager client before each test to prevent closed loop errors."""
     await redis_manager.close()

@@ -19,9 +19,9 @@ async def test_tool_executor_hotspot_investigation_evidence():
         longitude=72.8777,
         type="unknown",
         confidence=85.0,
-        ml_type="industrial_fire",
+        ml_type="industrial_thermal_source",
         ml_confidence=0.94,
-        model_version="xgboost-v1-1m-v2",
+        model_version="thermalwatch-v1",
         frp=32.5,
         brightness=325.4,
         bright_ti5=298.1,
@@ -41,7 +41,7 @@ async def test_tool_executor_hotspot_investigation_evidence():
     res = await executor.execute_tool("get_hotspot_details", {"hotspot_id": "FIRMS-001"})
 
     assert res["id"] == "FIRMS-001"
-    assert res["mlType"] == "industrial_fire"
+    assert res["mlType"] == "industrial_thermal_source"
     assert res["mlConfidence"] == 0.94
     assert res["frp"] == 32.5
     assert res["persistenceCount"] == 5

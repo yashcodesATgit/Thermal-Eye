@@ -20,7 +20,7 @@ async def test_tool_executor_dynamic_hotspots_filtering():
     executor.hotspot_repo = mock_repo
 
     args = {
-        "classification": "industrial_fire",
+        "classification": "industrial_thermal_source",
         "state": "Gujarat",
         "confidence_min": 0.75,
         "limit": 10
@@ -35,7 +35,7 @@ async def test_tool_executor_dynamic_hotspots_filtering():
         page_size=10,
         severity=None,
         state="Gujarat",
-        ml_type="industrial_fire",
+        ml_type="industrial_thermal_source",
         min_ml_confidence=0.75,
         near_lat=None,
         near_lng=None,
@@ -78,5 +78,5 @@ def test_scientific_disclosures_in_system_prompt():
     """Verify system prompt instructs model to distinguish ML prediction from ground truth."""
     assert "ML predictions are NOT verified ground truth" in SYSTEM_PROMPT
     assert "contextual spatial evidence, NOT proof of causation" in SYSTEM_PROMPT
-    assert "Use \"Predicted Industrial Fire\" or \"Likely Industrial Thermal Source\"" in SYSTEM_PROMPT
+    assert "Use \"Predicted Industrial Thermal Source\" or \"Likely Industrial Thermal Source\"" in SYSTEM_PROMPT
     assert "SINGLE SOURCE OF TRUTH" in SYSTEM_PROMPT

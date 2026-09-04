@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import cast, func, select
+from sqlalchemy import cast, func, select, Numeric
 from sqlalchemy.ext.asyncio import AsyncSession
 from geoalchemy2 import Geography
 
@@ -142,10 +142,16 @@ class HotspotRepository:
         # Aggregate by IST (Asia/Kolkata) calendar day to match Indian Standard Time
         date_trunc_day = func.date_trunc('day', func.timezone('Asia/Kolkata', Hotspot.timestamp))
         effective_type = func.coalesce(Hotspot.ml_type, Hotspot.type).label("type")
+        source_id = func.concat(
+            func.round(cast(Hotspot.latitude, Numeric), 3),
+            '_',
+            func.round(cast(Hotspot.longitude, Numeric), 3)
+        )
         query = select(
             date_trunc_day.label("day"),
             effective_type,
             func.count().label("count"),
+            func.count(func.distinct(source_id)).label("unique_source_count")
         ).group_by(date_trunc_day, effective_type)
 
         if source is not None:
@@ -172,4 +178,4 @@ class HotspotRepository:
         result = await self.db.execute(query)
         rows = result.all()
 
-        return [{"day": r.day, "type": r.type, "count": r.count} for r in rows]
+        return [{"day": r.day, "type": r.type, "count": r.count, "unique_source_count": r.unique_source_count} for r in rows]

@@ -230,14 +230,16 @@ class FIRMSIngestionService:
                 id, latitude, longitude, type, brightness, confidence,
                 severity, timestamp, facility_id, status,
                 country, state, city, district, source, geometry,
-                ml_type, ml_confidence, model_version, ml_explanation
+                ml_type, ml_confidence, model_version, ml_explanation, frp,
+                land_cover_class, land_cover_name
             )
             VALUES (
                 :id, :latitude, :longitude, :type, :brightness, :confidence,
                 :severity, :timestamp, :facility_id, :status,
                 :country, :state, :city, :district, :source,
                 ST_SetSRID(ST_MakePoint(CAST(:geom_lon AS float8), CAST(:geom_lat AS float8)), 4326),
-                :ml_type, :ml_confidence, :model_version, :ml_explanation
+                :ml_type, :ml_confidence, :model_version, :ml_explanation, :frp,
+                :land_cover_class, :land_cover_name
             )
             ON CONFLICT (id) DO NOTHING
             RETURNING id
@@ -249,12 +251,12 @@ class FIRMSIngestionService:
             params["geom_lon"] = record.get("longitude")
             params["geom_lat"] = record.get("latitude")
             params.setdefault("source", None)
+            params["frp"] = record.get("frp")
 
             # Phase 6 — Execute ML inference with failure isolation
             try:
-                pred = ml_inference_service.predict_observation(
-                    brightness=record.get("brightness", 300.0),
-                    confidence=record.get("confidence", 50.0),
+                pred = await ml_inference_service.predict_observation(
+                    db=self._db,
                     latitude=record.get("latitude", 0.0),
                     longitude=record.get("longitude", 0.0),
                     timestamp=record.get("timestamp"),
@@ -267,8 +269,22 @@ class FIRMSIngestionService:
                 logger.error("ML inference failed for observation %s (fallback to unknown): %s", record.get("id"), ml_exc)
                 params["ml_type"] = "unknown"
                 params["ml_confidence"] = 0.0
-                params["model_version"] = "xgboost-v1"
+                params["model_version"] = "thermalwatch-v1"
                 params["ml_explanation"] = json.dumps({"error": str(ml_exc)})
+
+            # Land-cover enrichment (non-blocking: errors default to NULL)
+            try:
+                from app.services.landcover import get_land_cover
+                lc_class, lc_name = get_land_cover(
+                    lat=record.get("latitude", 0.0),
+                    lon=record.get("longitude", 0.0),
+                )
+                params["land_cover_class"] = lc_class
+                params["land_cover_name"] = lc_name
+            except Exception as lc_exc:
+                logger.debug("Land-cover lookup skipped for %s: %s", record.get("id"), lc_exc)
+                params["land_cover_class"] = None
+                params["land_cover_name"] = None
 
             result = await self._db.execute(upsert_sql, params)
             # RETURNING returns a row only when a row was actually inserted
@@ -277,11 +293,11 @@ class FIRMSIngestionService:
 
                 # Generate real-time alert for warning/critical or high ML confidence events
                 sev = params.get("severity") or "info"
-                if sev in ("warning", "critical") or params.get("ml_type") in ("industrial_fire", "wildfire"):
+                if sev in ("warning", "critical") or params.get("ml_type") in ("industrial_thermal_source", "mining_thermal_source", "natural_fire"):
                     alert_id = f"ALT-{params['id']}"
                     title_label = (
-                        "Predicted Industrial Thermal Event"
-                        if params.get("ml_type") == "industrial_fire"
+                        "Predicted Industrial Source"
+                        if params.get("ml_type") == "industrial_thermal_source"
                         else "High Thermal Anomaly Detected"
                     )
                     state_str = params.get("state") or "India"

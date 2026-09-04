@@ -23,8 +23,8 @@ def test_analytical_tool_declarations():
 async def test_tool_executor_hotspot_statistics():
     """Verify get_hotspot_statistics computes server-side aggregations correctly."""
     mock_db = AsyncMock()
-    mock_hotspot1 = MagicMock(ml_type="industrial_fire", severity="high", frp=45.0, ml_confidence=0.92, persistence_count=3, state="Gujarat")
-    mock_hotspot2 = MagicMock(ml_type="wildfire", severity="medium", frp=15.0, ml_confidence=0.85, persistence_count=1, state="Gujarat")
+    mock_hotspot1 = MagicMock(ml_type="industrial_thermal_source", severity="high", frp=45.0, ml_confidence=0.92, persistence_count=3, state="Gujarat")
+    mock_hotspot2 = MagicMock(ml_type="natural_fire", severity="medium", frp=15.0, ml_confidence=0.85, persistence_count=1, state="Gujarat")
     mock_hotspot3 = MagicMock(ml_type="unknown", severity="low", frp=5.0, ml_confidence=0.40, persistence_count=1, state="Gujarat")
 
     mock_result = MagicMock()
@@ -35,8 +35,8 @@ async def test_tool_executor_hotspot_statistics():
     res = await executor.execute_tool("get_hotspot_statistics", {"state": "Gujarat"})
 
     assert res["totalObservations"] == 3
-    assert res["classificationBreakdown"]["industrial_fire"] == 1
-    assert res["classificationBreakdown"]["wildfire"] == 1
+    assert res["classificationBreakdown"]["industrial_thermal_source"] == 1
+    assert res["classificationBreakdown"]["natural_fire"] == 1
     assert res["classificationBreakdown"]["unknown"] == 1
     assert res["unknownCount"] == 1
     assert res["persistentEventCount"] == 1
@@ -95,7 +95,7 @@ async def test_tool_executor_get_top_hotspots():
     mock_hotspot = MagicMock(
         id="FIRMS-001",
         state="Maharashtra",
-        ml_type="industrial_fire",
+        ml_type="industrial_thermal_source",
         ml_confidence=0.95,
         frp=60.0,
         severity="high",

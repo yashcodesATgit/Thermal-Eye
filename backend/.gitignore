@@ -9,13 +9,12 @@ dist/
 build/
 venv/
 .venv/
-env/
+# Environment variables & Secrets
 .env
-*.env
+.env.*
+!.env.example
+!.env.template
 
-# Secrets
-.env.local
-.env.*.local
 
 # pytest
 .pytest_cache/
@@ -27,3 +26,6 @@ env/
 .vscode/
 .idea/
 *.swp
+
+# ML Artifacts
+data/ml/

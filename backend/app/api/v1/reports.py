@@ -1,5 +1,5 @@
 """
-Reports API endpoints for ThermalEye.
+Reports API endpoints for ThermalTrace.
 Generates structured incident/intelligence reports in JSON, CSV, or text/PDF formats.
 """
 from typing import Any, Dict, List, Optional
@@ -51,7 +51,7 @@ async def generate_report(
     hotspots = res.scalars().all()
 
     total_obs = len(hotspots)
-    class_counts = {"industrial_fire": 0, "gas_flare": 0, "wildfire": 0, "agricultural": 0, "unknown": 0}
+    class_counts = {"industrial_thermal_source": 0, "mining_thermal_source": 0, "natural_fire": 0, "unknown": 0}
     high_frp = 0
     persistent = 0
 
@@ -93,7 +93,7 @@ async def generate_report(
 
     report_payload = {
         "reportMetadata": {
-            "title": "ThermalEye Operational Intelligence Report",
+            "title": "ThermalTrace Operational Intelligence Report",
             "generatedAt": datetime.now(timezone.utc).isoformat(),
             "scope": req.state or "India-Wide",
             "appliedFilters": {
@@ -107,10 +107,9 @@ async def generate_report(
         },
         "executiveSummary": {
             "totalObservations": total_obs,
-            "predictedIndustrialFires": class_counts["industrial_fire"],
-            "predictedGasFlares": class_counts["gas_flare"],
-            "predictedWildfires": class_counts["wildfire"],
-            "agriculturalObservations": class_counts["agricultural"],
+            "predictedIndustrialThermalSources": class_counts["industrial_thermal_source"],
+            "predictedMiningThermalSources": class_counts["mining_thermal_source"],
+            "predictedNaturalFires": class_counts["natural_fire"],
             "unknownObservations": class_counts["unknown"],
             "persistentThermalEvents": persistent,
             "highFrpEvents": high_frp,
@@ -122,8 +121,8 @@ async def generate_report(
         },
         "scientificDisclosures": {
             "satelliteSource": "NASA FIRMS Satellite Thermal Anomaly Telemetry",
-            "modelInformation": "ThermalEye ML (model version xgboost-v1-1m-v2)",
-            "benchmarkAccuracy": "93.70% synthetic engineering benchmark performance (thermaleye-ml-1m-v2). Real-world ground truth not established.",
+            "modelInformation": "ThermalTrace ML (model version thermalwatch-v1)",
+            "benchmarkAccuracy": "Finalized 4-class taxonomy. OpenStreetMap industrial infrastructure provides corroborating geospatial evidence, not ground truth.",
             "nonCausationNotice": "Industrial facility proximity represents contextual spatial evidence, NOT proof of causation."
         },
         "incidentRecords": incidents_list[:50]
@@ -145,6 +144,6 @@ async def generate_report(
                 inc["severity"],
                 inc["facilityDistanceKm"]
             ])
-        return Response(content=output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=thermaleye_report.csv"})
+        return Response(content=output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=thermaltrace_report.csv"})
 
     return report_payload

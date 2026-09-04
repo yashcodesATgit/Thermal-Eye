@@ -50,10 +50,9 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   selectedHotspotId: null,
   selectedFacilityId: null,
   activeHotspotTypes: [
-    'industrial_fire',
-    'gas_flare',
-    'agricultural',
-    'wildfire',
+    'industrial_thermal_source',
+    'mining_thermal_source',
+    'natural_fire',
     'unknown',
   ],
   activeFacilityTypes: [
@@ -71,7 +70,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   showFacilities: true,
   showRiskZones: true,
   rightPanelOpen: false,
-  mapStyle: 'bright',
+  mapStyle: 'satellite',
 
   selectHotspot: (id) =>
     set({
@@ -132,10 +131,9 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   resetFilters: () =>
     set({
       activeHotspotTypes: [
-        'industrial_fire',
-        'gas_flare',
-        'agricultural',
-        'wildfire',
+        'industrial_thermal_source',
+        'mining_thermal_source',
+        'natural_fire',
         'unknown',
       ],
       activeFacilityTypes: [
