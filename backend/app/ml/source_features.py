@@ -151,6 +151,8 @@ async def build_source_features(
     latitude: float,
     longitude: float,
     cutoff_ts: datetime,
+    current_frp: Optional[float] = None,
+    allow_single_obs_fallback: bool = False,
 ) -> SourceFeatureVector:
     """
     Build the 8 source-level features for the grid cell containing
@@ -160,18 +162,21 @@ async def build_source_features(
         group_id = round(latitude, 3) + '_' + round(longitude, 3)
 
     Args:
-        db:          Open async SQLAlchemy session.
-        latitude:    Latitude of the incoming observation.
-        longitude:   Longitude of the incoming observation.
-        cutoff_ts:   Strict temporal cutoff. No observation after this timestamp
-                     may contribute to any feature.
+        db:                         Open async SQLAlchemy session.
+        latitude:                   Latitude of the incoming observation.
+        longitude:                  Longitude of the incoming observation.
+        cutoff_ts:                  Strict temporal cutoff. No observation after this timestamp
+                                    may contribute to any feature.
+        current_frp:                Optional FRP of the incoming observation if not yet in DB.
+        allow_single_obs_fallback:  If True and DB has 0 prior rows, treats the incoming
+                                    observation as a single-observation cluster (obs_count=1).
 
     Returns:
         SourceFeatureVector with all 8 features computed.
 
     Raises:
         InsufficientHistoryError: if the grid cell has zero observations
-                                  before cutoff_ts.
+                                  before cutoff_ts and fallback is disabled.
     """
     # -------------------------------------------------------------------
     # 1. Compute the grid cell key (round to 3 decimal places).
@@ -206,17 +211,28 @@ async def build_source_features(
 
     obs_count = len(rows)
     if obs_count == 0:
-        raise InsufficientHistoryError(
-            f"No historical observations found for grid cell "
-            f"({rounded_lat}, {rounded_lon}) before {cutoff_ts}. "
-            f"Cannot compute features without fabricating values."
-        )
+        if allow_single_obs_fallback:
+            timestamps = [cutoff_ts]
+            frp_values = [current_frp] if current_frp is not None else []
+            obs_count = 1
+        else:
+            raise InsufficientHistoryError(
+                f"No historical observations found for grid cell "
+                f"({rounded_lat}, {rounded_lon}) before {cutoff_ts}. "
+                f"Cannot compute features without fabricating values."
+            )
+    else:
+        timestamps = [r.timestamp for r in rows]
+        frp_values = [r.frp for r in rows if r.frp is not None]
+        if current_frp is not None and not any(r.timestamp == cutoff_ts and r.frp == current_frp for r in rows):
+            frp_values.append(current_frp)
+            timestamps.append(cutoff_ts)
+            obs_count = len(timestamps)
 
     # -------------------------------------------------------------------
-    # 3. Extract timestamp and FRP series.
+    # 3. Extract timestamp and FRP series statistics.
     # -------------------------------------------------------------------
-    timestamps: List[datetime] = [r.timestamp for r in rows]
-    frp_values: List[float] = [r.frp for r in rows if r.frp is not None]
+
 
     min_ts = min(timestamps)
     max_ts = max(timestamps)

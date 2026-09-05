@@ -32,6 +32,7 @@ class MLInferenceService:
         latitude: float,
         longitude: float,
         timestamp: Any,
+        frp: Optional[float] = None,
     ) -> MLPredictionOutput:
         """Runs ML inference on a single thermal observation using historical DB features."""
         if not model_manager.is_loaded:
@@ -52,7 +53,9 @@ class MLInferenceService:
                 db=db,
                 latitude=latitude,
                 longitude=longitude,
-                cutoff_ts=timestamp
+                cutoff_ts=timestamp,
+                current_frp=frp,
+                allow_single_obs_fallback=True,
             )
 
             X_val = np.array([feature_vector.to_list()], dtype=np.float32)

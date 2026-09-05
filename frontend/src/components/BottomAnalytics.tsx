@@ -86,9 +86,9 @@ export default function BottomAnalytics(): React.JSX.Element {
           </span>
         </div>
 
-        {/* Category Legend Badges (Excluding Unknown) */}
+        {/* Category Legend Badges */}
         <div className="flex items-center gap-4 text-[10px] font-medium">
-          {categories.filter(cat => cat !== 'unknown').map((cat) => (
+          {categories.map((cat) => (
             <span key={cat} className="flex items-center gap-1.5 text-[#9CA3AF]">
               <span
                 className="w-2.5 h-2.5 rounded-sm shrink-0"
@@ -111,7 +111,7 @@ export default function BottomAnalytics(): React.JSX.Element {
 
         {dates.map((d) => {
           const isSelected = d.isoDate === selectedDate;
-          const total = d.uniqueSources; // Use unique sources for the visual bar height
+          const total = d.total || 1; // Total FIRMS Detections in sync with Legend panel
           const barHeightPct = Math.max(18, Math.min((total / maxTotal) * 100, 92));
 
           return (
@@ -121,12 +121,12 @@ export default function BottomAnalytics(): React.JSX.Element {
               onClick={() => setSelectedDate(d.isoDate)}
               className="flex-1 min-w-[36px] flex flex-col items-center group cursor-pointer h-full justify-end z-10 transition-transform active:scale-95"
             >
-              {/* Unique Source Count Badge */}
+              {/* FIRMS Detection Total Badge */}
               <span
                 className="text-[8.5px] sm:text-[9px] font-mono font-bold mb-0.5 sm:mb-1 transition-colors"
                 style={{ color: isSelected ? '#2D7DD2' : '#6B7280' }}
               >
-                {d.uniqueSources}
+                {d.total}
               </span>
 
               {/* Stacked Bar Container */}
@@ -141,22 +141,29 @@ export default function BottomAnalytics(): React.JSX.Element {
                 <div
                   className="w-full transition-all duration-500 rounded-t-sm"
                   style={{
-                    height: total > 0 ? `${(d.countsUnique.industrial_thermal_source / total) * 100}%` : '0%',
+                    height: total > 0 ? `${(d.counts.industrial_thermal_source / total) * 100}%` : '0%',
                     backgroundColor: HOTSPOT_COLORS.industrial_thermal_source,
                   }}
                 />
                 <div
                   className="w-full transition-all duration-500"
                   style={{
-                    height: total > 0 ? `${(d.countsUnique.mining_thermal_source / total) * 100}%` : '0%',
+                    height: total > 0 ? `${(d.counts.mining_thermal_source / total) * 100}%` : '0%',
                     backgroundColor: HOTSPOT_COLORS.mining_thermal_source,
                   }}
                 />
                 <div
                   className="w-full transition-all duration-500"
                   style={{
-                    height: total > 0 ? `${(d.countsUnique.natural_fire / total) * 100}%` : '0%',
+                    height: total > 0 ? `${(d.counts.natural_fire / total) * 100}%` : '0%',
                     backgroundColor: HOTSPOT_COLORS.natural_fire,
+                  }}
+                />
+                <div
+                  className="w-full transition-all duration-500"
+                  style={{
+                    height: total > 0 ? `${(d.counts.unknown / total) * 100}%` : '0%',
+                    backgroundColor: HOTSPOT_COLORS.unknown,
                   }}
                 />
               </div>

@@ -260,6 +260,7 @@ class FIRMSIngestionService:
                     latitude=record.get("latitude", 0.0),
                     longitude=record.get("longitude", 0.0),
                     timestamp=record.get("timestamp"),
+                    frp=record.get("frp"),
                 )
                 params["ml_type"] = pred.ml_type
                 params["ml_confidence"] = pred.ml_confidence
