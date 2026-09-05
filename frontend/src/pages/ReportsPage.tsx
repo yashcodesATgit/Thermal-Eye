@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { ChatAssistant } from '../components/ChatAssistant';
 import api from '../services/api';
 import {
   FileText,
@@ -324,8 +323,6 @@ export default function ReportsPage(): React.JSX.Element {
           </div>
         )}
       </main>
-
-      <ChatAssistant />
     </div>
   );
 }

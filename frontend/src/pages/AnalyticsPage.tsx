@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { ChatAssistant } from '../components/ChatAssistant';
 import api from '../services/api';
 import {
   BarChart3,
@@ -483,8 +482,6 @@ export default function AnalyticsPage(): React.JSX.Element {
           </>
         )}
       </main>
-
-      <ChatAssistant />
     </div>
   );
 }

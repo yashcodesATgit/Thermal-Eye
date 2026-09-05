@@ -9,8 +9,6 @@ import BottomAnalytics from '../components/BottomAnalytics';
 import { AlertCircle, ArrowRight, SlidersHorizontal, Info, X } from 'lucide-react';
 import { useMapStore } from '../store/mapStore';
 
-import { ChatAssistant } from '../components/ChatAssistant';
-
 export default function MapPage(): React.JSX.Element {
   const mapRef = useRef<MapRef>(null!);
   const fetchAndSetLatestDate = useMapStore((s) => s.fetchAndSetLatestDate);
@@ -98,12 +96,6 @@ export default function MapPage(): React.JSX.Element {
                 <span className="hidden sm:inline">Intelligence</span>
               </button>
             </div>
-
-            {/* Compact Floating AI Intelligence Assistant in Right Bottom Corner of Map Area */}
-            <ChatAssistant
-              selectedHotspotId={selectedHotspotId}
-              positionClass="absolute bottom-3 right-3 z-30"
-            />
           </div>
 
           {/* Bottom: Past Activity Dashboard (Center-Only Width, aligned with Map) */}
